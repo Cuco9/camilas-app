@@ -162,6 +162,11 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
   <button onclick="importarDatosExcel()" style="background:#fff;color:#0F6E56;border:none;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap">Importar ahora</button>
 </div>
 
+
+<div id="banner-import" style="background:#0F6E56;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px">
+  <span><b>📥 Datos listos para importar</b><br><span style="opacity:.85;font-size:11px">108 productos · Días 01 y 02 Jun 2026</span></span>
+  <button onclick="importarDatosExcel()" style="background:#fff;color:#0F6E56;border:none;border-radius:8px;padding:7px 12px;font-weight:700;cursor:pointer;font-size:12px;white-space:nowrap">Importar ahora</button>
+</div>
 <div class="header">
   <h1><i class="ti ti-shopping-bag" style="font-size:17px;vertical-align:-2px;margin-right:6px" aria-hidden="true"></i><span id="header-nombre">Los Camil@s</span></h1>
   <div class="fecha-sel" onclick="abrirCalModal()">
@@ -182,10 +187,25 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
     <div id="cuadre-cont"><div class="empty" style="padding:16px"><i class="ti ti-lock-open"></i>Cierra el día para ver el cuadre</div></div>
     <div id="cuadre-caja" style="display:none">
       <div class="divider"></div>
-      <div class="form-row">
-        <div><label class="lbl">Efectivo (CUP)</label><input type="number" id="inp-efectivo" placeholder="0" oninput="calcCuadre()"></div>
+      <div class="form-row" style="margin-bottom:4px">
+        <div>
+          <label class="lbl">Efectivo (CUP)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="number" id="inp-efectivo" placeholder="0" oninput="calcCuadre()" style="margin-bottom:0;flex:1">
+            <button class="btn small" onclick="abrirContador()" title="Contar billetes" style="flex-shrink:0;padding:9px 10px">
+              <i class="ti ti-calculator" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
         <div><label class="lbl">Transferencia (CUP)</label><input type="number" id="inp-transfer" placeholder="0" oninput="calcCuadre()"></div>
       </div>
+      <div class="divider"></div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Ajuste salario — <span id="cuadre-sal-fecha" style="color:var(--green);font-weight:400;text-transform:none"></span></div>
+      <div class="form-row">
+        <div><label class="lbl">Bonificación (CUP)</label><input type="number" id="cuadre-bonus" placeholder="0" oninput="guardarAjusteSal()"></div>
+        <div><label class="lbl">Descuento (CUP)</label><input type="number" id="cuadre-descuento" placeholder="0" oninput="guardarAjusteSal()"></div>
+      </div>
+      <div id="cuadre-sal-preview" style="font-size:12px;color:var(--text2);margin:-4px 0 8px"></div>
       <div id="cuadre-result"></div>
     </div>
     <button class="btn primary full" style="margin-top:12px" onclick="mostrarPantalla('cierre',null)">
@@ -193,18 +213,13 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
     </button>
   </div>
 
-  <!-- TOP con filtro -->
+  <!-- TOP -->
   <div class="card">
-    <div class="card-title"><i class="ti ti-trophy" aria-hidden="true"></i>Estadísticas</div>
-    <div class="tab-row" style="margin-bottom:10px">
-      <button class="tab activo" onclick="cambiarTabTop('dia',this)">Hoy</button>
-      <button class="tab" onclick="cambiarTabTop('mes',this)">Este mes</button>
-      <button class="tab" onclick="cambiarTabTop('anio',this)">Este año</button>
-    </div>
-    <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Más vendidos</div>
+    <div class="card-title"><i class="ti ti-trophy" aria-hidden="true"></i>Top productos vendidos</div>
     <div id="top-vendidos"><div class="empty"><i class="ti ti-chart-bar"></i>Cierra un día para ver estadísticas</div></div>
-    <div class="divider"></div>
-    <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 6px">Más rentables</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-trending-up" aria-hidden="true"></i>Top por ganancia</div>
     <div id="top-ganancia"><div class="empty"><i class="ti ti-coin"></i>Sin datos aún</div></div>
   </div>
 </div>
@@ -350,49 +365,20 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
 
 <!-- ═══ INVENTARIO ═══ -->
 <div id="p-inventario" class="pantalla">
-  <div class="tab-row">
-    <button class="tab activo" onclick="cambiarTabInv2('productos',this)">Productos</button>
-    <button class="tab" onclick="cambiarTabInv2('stock',this)">Stock</button>
-    <button class="tab" onclick="cambiarTabInv2('vencimientos',this)">Vencimientos</button>
+  <div class="search-bar">
+    <input type="text" placeholder="Buscar producto..." id="busq-prod" oninput="renderProds()">
+    <select class="sort-sel" id="sort-prod" onchange="renderProds()">
+      <option value="alfa">A-Z</option>
+      <option value="stock">Stock ↓</option>
+      <option value="precio">Precio ↓</option>
+      <option value="cat">Categoría</option>
+    </select>
+    <button class="btn primary small" onclick="abrirModalProd(null)"><i class="ti ti-plus" aria-hidden="true"></i></button>
   </div>
-  <div id="inv2-productos">
-    <div class="search-bar">
-      <input type="text" placeholder="Buscar producto..." id="busq-prod" oninput="renderProds()">
-      <select class="sort-sel" id="sort-prod" onchange="renderProds()">
-        <option value="alfa">A-Z</option>
-        <option value="stock">Stock ↓</option>
-        <option value="precio">Precio ↓</option>
-        <option value="cat">Categoría</option>
-      </select>
-      <button class="btn primary small" onclick="abrirModalProd(null)"><i class="ti ti-plus" aria-hidden="true"></i></button>
-    </div>
-    <div class="card" style="padding:6px 14px"><div id="lista-prods"><div class="empty"><i class="ti ti-box"></i>Agrega tu primer producto</div></div></div>
-    <div class="btn-row" style="margin-bottom:12px">
-      <button class="btn small" onclick="abrirModalImportar()"><i class="ti ti-file-import" aria-hidden="true"></i> Importar CSV</button>
-      <button class="btn small" onclick="exportarInventarioCSV()"><i class="ti ti-download" aria-hidden="true"></i> Exportar CSV</button>
-    </div>
-  </div>
-  <div id="inv2-stock" style="display:none">
-    <div class="search-bar">
-      <input type="text" placeholder="Buscar..." id="busq-stock" oninput="renderStock()">
-      <select class="sort-sel" id="sort-stock" onchange="renderStock()">
-        <option value="alfa">A-Z</option>
-        <option value="mayor">Mayor stock</option>
-        <option value="menor">Menor stock</option>
-        <option value="bajo">Stock bajo primero</option>
-      </select>
-    </div>
-    <div class="card" style="padding:6px 14px"><div id="lista-stock"></div></div>
-  </div>
-  <div id="inv2-vencimientos" style="display:none">
-    <div class="card" style="padding:6px 14px">
-      <div class="section-hdr">Próximos a vencer (10 días)</div>
-      <div id="lista-por-vencer"></div>
-    </div>
-    <div class="card" style="padding:6px 14px">
-      <div class="section-hdr">Todos con fecha de vencimiento</div>
-      <div id="lista-vencimientos"></div>
-    </div>
+  <div class="card" style="padding:6px 14px"><div id="lista-prods"><div class="empty"><i class="ti ti-box"></i>Agrega tu primer producto</div></div></div>
+  <div class="btn-row" style="margin-bottom:12px">
+    <button class="btn small" onclick="abrirModalImportar()"><i class="ti ti-file-import" aria-hidden="true"></i> Importar CSV</button>
+    <button class="btn small" onclick="exportarInventarioCSV()"><i class="ti ti-download" aria-hidden="true"></i> Exportar CSV</button>
   </div>
 </div>
 
@@ -435,14 +421,19 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
     <input type="number" id="cfg-sal-min" placeholder="500" onchange="guardarConfig()">
     <label class="lbl">% de ganancia para salario</label>
     <input type="number" id="cfg-sal-pct" placeholder="17" onchange="guardarConfig()">
-    <div style="font-size:12px;color:var(--text3);margin-top:-4px;margin-bottom:12px">Se paga el mayor entre el mínimo y el % calculado.</div>
-    <div class="divider"></div>
-    <div style="font-size:13px;font-weight:600;margin:10px 0 8px">Ajuste del día — <span id="cfg-sal-fecha" style="color:var(--green);font-weight:400"></span></div>
-    <div class="form-row">
-      <div><label class="lbl">Bonificación (CUP)</label><input type="number" id="cfg-bonus" placeholder="0" oninput="guardarAjusteSal()"></div>
-      <div><label class="lbl">Descuento (CUP)</label><input type="number" id="cfg-descuento" placeholder="0" oninput="guardarAjusteSal()"></div>
+    <div style="font-size:12px;color:var(--text3);margin-top:-4px">Se paga el mayor entre el mínimo y el % calculado.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-database-export" aria-hidden="true"></i>Backup de datos</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Exporta todos los datos de la app para importarlos en otro dispositivo o como respaldo.</div>
+    <div class="btn-row">
+      <button class="btn primary small" onclick="exportarBackup()"><i class="ti ti-database-export" aria-hidden="true"></i> Exportar backup</button>
+      <button class="btn small" onclick="document.getElementById('imp-backup-file').click()"><i class="ti ti-database-import" aria-hidden="true"></i> Importar backup</button>
     </div>
-    <div id="cfg-sal-preview" style="font-size:13px;color:var(--text2);padding:4px 0"></div>
+    <input type="file" id="imp-backup-file" accept=".json" style="display:none" onchange="importarBackup(event)">
+    <div class="divider" style="margin-top:12px"></div>
+    <div style="font-size:12px;color:var(--text2);margin:8px 0 4px;font-weight:600">Restaurar / Deshacer</div>
+    <button class="btn small full" onclick="deshacerCierre()" style="margin-bottom:6px"><i class="ti ti-rotate-left" aria-hidden="true"></i> Reabrir último cierre del día</button>
   </div>
   <div class="card">
     <div class="card-title"><i class="ti ti-share" aria-hidden="true"></i>Compartir y exportar</div>
@@ -501,8 +492,6 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
       <div><label class="lbl">Stock actual</label><input type="number" id="mp-stock" placeholder="0"></div>
       <div><label class="lbl">Alerta stock mínimo</label><input type="number" id="mp-min" placeholder="5"></div>
     </div>
-    <label class="lbl">Fecha de vencimiento <span style="font-weight:400;text-transform:none;color:var(--text3)">(opcional)</span></label>
-    <input type="date" id="mp-vence" style="margin-bottom:10px">
     <div id="mp-error" style="color:var(--red);font-size:13px;margin:-4px 0 8px;min-height:16px"></div>
     <button class="btn primary full" onclick="guardarProducto()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar producto</button>
   </div>
@@ -550,6 +539,27 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- MODAL CONTADOR -->
+<div class="modal-overlay" id="modal-contador" onclick="cerrarModalOverlay(event,'modal-contador')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <button class="modal-close-btn" onclick="cerrarModal('modal-contador')"><i class="ti ti-x" aria-hidden="true"></i></button>
+    <h3><i class="ti ti-calculator" style="font-size:18px;vertical-align:-2px;margin-right:6px;color:var(--green)" aria-hidden="true"></i>Contador de billetes</h3>
+    <div id="contador-billetes"></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0 12px">
+      <span style="font-size:15px;font-weight:600">Total contado</span>
+      <span id="contador-total" style="font-size:22px;font-weight:700;color:var(--green)">$0</span>
+    </div>
+    <button class="btn primary full" onclick="enviarContadorACuadre()">
+      <i class="ti ti-send" aria-hidden="true"></i> Enviar a Efectivo CUP
+    </button>
+    <button class="btn full" style="margin-top:8px" onclick="limpiarContador()">
+      <i class="ti ti-eraser" aria-hidden="true"></i> Limpiar
+    </button>
+  </div>
+</div>
 
 <script>
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -653,9 +663,7 @@ function gananciaNeta(f){return gananciasBrutaDia(f)-totalMermasDia(f)-totalGast
 function salarioDia(f){
   const gn=gananciaNeta(f),tv=totalVentasDia(f);
   if(tv<=0)return 0;
-  const base=Math.max(DB.config.salMin,gn*(DB.config.salPct/100));
-  const dia=DB.dias[f];
-  return Math.max(0,base+Number(dia?.salBonus||0)-Number(dia?.salDescuento||0));
+  return Math.max(DB.config.salMin,gn*(DB.config.salPct/100));
 }
 
 // ─── NAVEGACIÓN ──────────────────────────────────────────────
@@ -667,7 +675,7 @@ function mostrarPantalla(id,btn){
   if(id==='inicio')renderInicio();
   if(id==='movimientos'){cambiarTabMov('entradas',document.querySelector('#p-movimientos .tab'));poblarSelectsMov();}
   if(id==='cierre')renderCierreForm();
-  if(id==='inventario'){cambiarTabInv2('productos',document.querySelector('#p-inventario .tab'));}
+  if(id==='inventario')renderProds();
   if(id==='historial')renderHistMovs();
   if(id==='config')renderConfig();
 }
@@ -692,17 +700,11 @@ function renderInicio(){
 }
 
 function renderAlertas(){
-  const hoy=new Date();hoy.setHours(0,0,0,0);
-  const alertasVenc=DB.productos.filter(p=>p.vence).map(p=>{
-    const vence=new Date(p.vence+'T00:00:00');
-    const dias=Math.round((vence-hoy)/(1000*60*60*24));
-    return{...p,dias};
-  }).filter(p=>p.dias<=10).sort((a,b)=>a.dias-b.dias);
-  document.getElementById('alertas-cont').innerHTML=alertasVenc.map(p=>{
-    const msg=p.dias<0?`Vencido hace ${Math.abs(p.dias)}d`:p.dias===0?'Vence HOY':`Vence en ${p.dias}d`;
-    return`<div class="alerta"><i class="ti ti-alert-triangle" aria-hidden="true"></i>
-    <span>${msg}: <b>${p.nombre}</b></span></div>`;
-  }).join('');
+  const inv=invDisponible(diaActual);
+  const alertas=DB.productos.filter(p=>{const i=inv[p.id];return i&&i.qty<=p.stockMin});
+  document.getElementById('alertas-cont').innerHTML=alertas.map(p=>`
+    <div class="alerta"><i class="ti ti-alert-triangle" aria-hidden="true"></i>
+    <span>Stock bajo: <b>${p.nombre}</b> — ${Math.round(inv[p.id]?.qty||0)} u.</span></div>`).join('');
 }
 
 function renderCuadreInicio(){
@@ -733,6 +735,14 @@ function renderCuadreInicio(){
   const tr=document.getElementById('inp-transfer');
   if(ef)ef.value=dia.efectivo||'';
   if(tr)tr.value=dia.transfer||'';
+  // Bonus/descuento en cuadre
+  const cbFecha=document.getElementById('cuadre-sal-fecha');
+  if(cbFecha)cbFecha.textContent=formatFecha(diaActual);
+  const cbBonus=document.getElementById('cuadre-bonus');
+  const cbDesc=document.getElementById('cuadre-descuento');
+  if(cbBonus)cbBonus.value=dia.salBonus||'';
+  if(cbDesc)cbDesc.value=dia.salDescuento||'';
+  actualizarPreviewSalCuadre();
   calcCuadre();
 }
 
@@ -752,20 +762,9 @@ function calcCuadre(){
   const dia=getDia(diaActual);dia.efectivo=ef;dia.transfer=tr;guardarDB();
 }
 
-let topPeriodo='dia';
-function cambiarTabTop(periodo,btn){
-  topPeriodo=periodo;
-  document.querySelectorAll('#p-inicio .tab-row .tab').forEach(t=>t.classList.remove('activo'));
-  if(btn)btn.classList.add('activo');
-  renderTop();
-}
 function renderTop(){
   const gn={},vd={};
-  const [ay,am]=diaActual.split('-');
   Object.entries(DB.dias).forEach(([f])=>{
-    const [fy,fm]=f.split('-');
-    const ok=(topPeriodo==='dia'&&f===diaActual)||(topPeriodo==='mes'&&fy===ay&&fm===am)||(topPeriodo==='anio'&&fy===ay);
-    if(!ok)return;
     calcVentasDesdeInvFinal(f).forEach(v=>{
       vd[v.prodId]=(vd[v.prodId]||0)+v.vendido;
       gn[v.prodId]=(gn[v.prodId]||0)+v.ganancia;
@@ -773,17 +772,16 @@ function renderTop(){
   });
   const getProd=id=>DB.productos.find(p=>p.id==id)||{nombre:'Eliminado'};
   const r=['gold','','','',''];
-  const lbl=topPeriodo==='dia'?'hoy':topPeriodo==='mes'?'este mes':'este año';
   const topV=Object.entries(vd).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const topG=Object.entries(gn).sort((a,b)=>b[1]-a[1]).slice(0,5);
   document.getElementById('top-vendidos').innerHTML=topV.length?topV.map(([id,q],i)=>`
     <div class="top-item"><div class="top-rank ${r[i]}">${i+1}</div>
     <div class="top-name">${getProd(id).nombre}</div><div class="top-val">${q} u.</div></div>`).join('')
-    :`<div class="empty"><i class="ti ti-chart-bar"></i>Sin datos para ${lbl}</div>`;
+    :`<div class="empty"><i class="ti ti-chart-bar"></i>Cierra un día para ver estadísticas</div>`;
   document.getElementById('top-ganancia').innerHTML=topG.length?topG.map(([id,g],i)=>`
     <div class="top-item"><div class="top-rank ${r[i]}">${i+1}</div>
     <div class="top-name">${getProd(id).nombre}</div><div class="top-val">${cup(g)}</div></div>`).join('')
-    :`<div class="empty"><i class="ti ti-coin"></i>Sin datos para ${lbl}</div>`;
+    :`<div class="empty"><i class="ti ti-coin"></i>Sin datos aún</div>`;
 }
 
 // ─── CIERRE DEL DÍA ──────────────────────────────────────────
@@ -1086,7 +1084,6 @@ function abrirModalProd(id){
   document.getElementById('mp-venta').value=p?.venta??'';
   document.getElementById('mp-stock').value=p?.stock??'';
   document.getElementById('mp-min').value=p?.stockMin??5;
-  document.getElementById('mp-vence').value=p?.vence||'';
   document.getElementById('mp-error').textContent='';
   document.getElementById('modal-prod').classList.add('open');
   setTimeout(()=>document.getElementById('mp-nombre').focus(),200);
@@ -1100,19 +1097,18 @@ function guardarProducto(){
   const stock=parseFloat(document.getElementById('mp-stock').value)||0;
   const stockMin=parseFloat(document.getElementById('mp-min').value)||5;
   const cat=document.getElementById('mp-cat').value.trim();
-  const vence=document.getElementById('mp-vence').value||null;
   if(editandoProd){
     const p=DB.productos.find(x=>x.id==editandoProd);
     if(p){
       if(p.costo!==costo||p.venta!==venta){
         DB.movimientos.push({tipo:'ajuste',fecha:diaActual,ts:Date.now(),desc:`Precio: ${nombre} — Costo ${cup(p.costo)}→${cup(costo)}, Venta ${cup(p.venta)}→${cup(venta)}`});
       }
-      p.nombre=nombre;p.cat=cat;p.costo=costo;p.venta=venta;p.stock=stock;p.stockMin=stockMin;p.vence=vence;
+      p.nombre=nombre;p.cat=cat;p.costo=costo;p.venta=venta;p.stock=stock;p.stockMin=stockMin;
       const dia=getDia(diaActual);if(dia.invInicial[p.id])dia.invInicial[p.id].qty=stock;
     }
   } else {
     const id=Date.now();
-    DB.productos.push({id,nombre,cat,costo,venta,stock,stockMin,vence});
+    DB.productos.push({id,nombre,cat,costo,venta,stock,stockMin});
     const dia=getDia(diaActual);dia.invInicial[id]={qty:stock,costo,venta};
   }
   guardarDB();cerrarModal('modal-prod');renderProds();toast(editandoProd?'✓ Actualizado':'✓ Producto agregado');
@@ -1414,97 +1410,115 @@ function cerrarModalOverlay(e,id){if(e.target.id===id)cerrarModal(id)}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 
 
-// ─── TABS INVENTARIO ─────────────────────────────────────────
-function cambiarTabInv2(tab,btn){
-  ['productos','stock','vencimientos'].forEach(t=>{
-    const el=document.getElementById('inv2-'+t);if(el)el.style.display=t===tab?'block':'none';
-  });
-  document.querySelectorAll('#p-inventario .tab-row .tab').forEach(b=>b.classList.remove('activo'));
-  if(btn)btn.classList.add('activo');
-  if(tab==='productos')renderProds();
-  if(tab==='stock')renderStock();
-  if(tab==='vencimientos')renderVencimientos();
+// ─── CONTADOR DE BILLETES ─────────────────────────────────────
+const BILLETES_CUP=[1,3,5,10,20,50,100,200,500,1000];
+let contadorVals={};
+
+function abrirContador(){
+  contadorVals={};
+  renderContador();
+  document.getElementById('modal-contador').classList.add('open');
 }
 
-// ─── STOCK ───────────────────────────────────────────────────
-function renderStock(){
-  const busq=(document.getElementById('busq-stock')?.value||'').toLowerCase();
-  const sort=document.getElementById('sort-stock')?.value||'alfa';
-  const inv=invDisponible(diaActual);
-  let prods=[...DB.productos];
-  if(busq)prods=prods.filter(p=>p.nombre.toLowerCase().includes(busq)||(p.cat||'').toLowerCase().includes(busq));
-  if(sort==='alfa')prods.sort((a,b)=>a.nombre.localeCompare(b.nombre));
-  else if(sort==='mayor')prods.sort((a,b)=>(inv[b.id]?.qty||0)-(inv[a.id]?.qty||0));
-  else if(sort==='menor')prods.sort((a,b)=>(inv[a.id]?.qty||0)-(inv[b.id]?.qty||0));
-  else if(sort==='bajo')prods.sort((a,b)=>{
-    const ba=inv[a.id]?.qty<=a.stockMin?0:1,bb=inv[b.id]?.qty<=b.stockMin?0:1;
-    return ba-bb||(inv[a.id]?.qty||0)-(inv[b.id]?.qty||0);
-  });
-  const el=document.getElementById('lista-stock');if(!el)return;
-  el.innerHTML=prods.length?prods.map(p=>{
-    const qty=Number(inv[p.id]?.qty??p.stock);
-    const bajo=qty<=p.stockMin;
-    const max=Math.max(qty,p.stockMin*3,1);
-    const pct=Math.min(100,Math.round((qty/max)*100));
-    return`<div style="padding:9px 0;border-bottom:.5px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <div><span style="font-size:14px;font-weight:500">${p.nombre}</span>
-          ${bajo?`<span class="badge red" style="margin-left:6px">Bajo</span>`:''}
-        </div>
-        <span style="font-size:15px;font-weight:700;color:${bajo?'var(--red)':'var(--green)'}">${Math.round(qty)} u.</span>
+function renderContador(){
+  const total=BILLETES_CUP.reduce((s,b)=>s+(contadorVals[b]||0)*b,0);
+  document.getElementById('contador-billetes').innerHTML=BILLETES_CUP.map(b=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--border)">
+      <div style="width:60px;font-size:14px;font-weight:700;color:var(--green)">${cup(b)}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex:1">
+        <button onclick="ajustarBillete(${b},-1)" style="width:30px;height:30px;border-radius:8px;border:.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center" ${(contadorVals[b]||0)<=0?'disabled':''}>−</button>
+        <input type="number" min="0" value="${contadorVals[b]||0}" onchange="setBillete(${b},this.value)"
+          style="width:56px;text-align:center;padding:6px;border-radius:8px;border:.5px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;margin:0">
+        <button onclick="ajustarBillete(${b},1)" style="width:30px;height:30px;border-radius:8px;border:.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center">+</button>
       </div>
-      <div style="height:5px;background:var(--bg);border-radius:4px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:${bajo?'var(--red)':'var(--green-mid)'};border-radius:4px"></div>
+      <div style="min-width:70px;text-align:right;font-size:13px;font-weight:600;color:${(contadorVals[b]||0)>0?'var(--green)':'var(--text3)'}">
+        ${(contadorVals[b]||0)>0?cup((contadorVals[b]||0)*b):''}
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:3px">Mínimo: ${p.stockMin} u. · Venta: ${cup(p.venta)}</div>
-    </div>`}).join(''):`<div class="empty"><i class="ti ti-box"></i>Sin productos</div>`;
+    </div>`).join('');
+  document.getElementById('contador-total').textContent=cup(total);
 }
 
-// ─── VENCIMIENTOS ─────────────────────────────────────────────
-function renderVencimientos(){
-  const hoy=new Date();hoy.setHours(0,0,0,0);
-  const prods=DB.productos.filter(p=>p.vence).map(p=>{
-    const vence=new Date(p.vence+'T00:00:00');
-    return{...p,dias:Math.round((vence-hoy)/(1000*60*60*24))};
-  }).sort((a,b)=>a.dias-b.dias);
-  const fmtDias=d=>{
-    if(d<0)return`<span style="color:var(--red);font-weight:700">Vencido hace ${Math.abs(d)}d</span>`;
-    if(d===0)return`<span style="color:var(--red);font-weight:700">Vence HOY</span>`;
-    if(d<=3)return`<span style="color:var(--red);font-weight:700">Vence en ${d}d</span>`;
-    if(d<=10)return`<span style="color:var(--amber);font-weight:700">Vence en ${d}d</span>`;
-    return`<span style="color:var(--green)">Vence en ${d}d</span>`;
+function ajustarBillete(billete,delta){
+  contadorVals[billete]=Math.max(0,(contadorVals[billete]||0)+delta);
+  renderContador();
+}
+function setBillete(billete,val){
+  contadorVals[billete]=Math.max(0,parseInt(val)||0);
+  renderContador();
+}
+function limpiarContador(){
+  contadorVals={};renderContador();
+}
+function enviarContadorACuadre(){
+  const total=BILLETES_CUP.reduce((s,b)=>s+(contadorVals[b]||0)*b,0);
+  const ef=document.getElementById('inp-efectivo');
+  if(ef){ef.value=total;calcCuadre();}
+  cerrarModal('modal-contador');
+  toast(`✓ ${cup(total)} enviado a Efectivo CUP`);
+}
+
+// ─── BACKUP COMPLETO ──────────────────────────────────────────
+function exportarBackup(){
+  const data=JSON.stringify(DB,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const fecha=new Date().toISOString().slice(0,10);
+  a.href=url;a.download=`camilas_backup_${fecha}.json`;a.click();
+  URL.revokeObjectURL(url);
+  toast('✓ Backup exportado');
+}
+
+function importarBackup(event){
+  const file=event.target.files[0];if(!file)return;
+  if(!confirm('¿Importar este backup? Se reemplazarán TODOS los datos actuales.'))return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.productos||!data.dias)throw new Error('Archivo no válido');
+      localStorage.setItem('camilas_v4',e.target.result);
+      
+// ─── IMPORTAR DATOS EXCEL ─────────────────────────────────────
+const DATOS_EXCEL = {"productos": [{"id": 1748000000000, "nombre": "Ajonjoli", "cat": "", "costo": 90.0, "venta": 120.0, "stock": 13.0, "stockMin": 5}, {"id": 1748000000001, "nombre": "Arroz 1kg", "cat": "", "costo": 590.0, "venta": 650.0, "stock": 7.0, "stockMin": 5}, {"id": 1748000000002, "nombre": "Azúcar", "cat": "", "costo": 626.0, "venta": 700.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000003, "nombre": "Barra de cremita de leche", "cat": "", "costo": 100.0, "venta": 130.0, "stock": 17.0, "stockMin": 5}, {"id": 1748000000004, "nombre": "Bombon", "cat": "", "costo": 37.0, "venta": 50.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000005, "nombre": "Café en tasa", "cat": "", "costo": 15.0, "venta": 30.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000006, "nombre": "Café expreso", "cat": "", "costo": 1750.0, "venta": 2200.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000007, "nombre": "Café Pablo el Tostador", "cat": "", "costo": 720.0, "venta": 800.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000008, "nombre": "Caja cigarro Englishman menta", "cat": "", "costo": 520.0, "venta": 650.0, "stock": 1.0, "stockMin": 5}, {"id": 1748000000009, "nombre": "Caja Cigarro H.upmam sin filtro", "cat": "", "costo": 400.0, "venta": 500.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000010, "nombre": "Caja Cigarro H.upman selecto", "cat": "", "costo": 380.0, "venta": 450.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000011, "nombre": "Caja Cigarro popular azul", "cat": "", "costo": 320.0, "venta": 450.0, "stock": 7.0, "stockMin": 5}, {"id": 1748000000012, "nombre": "Caja Cigarro popular rojo", "cat": "", "costo": 390.0, "venta": 500.0, "stock": 1.0, "stockMin": 5}, {"id": 1748000000013, "nombre": "Caja Cigarro Popular Verde", "cat": "", "costo": 380.0, "venta": 450.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000014, "nombre": "Canecas Milner", "cat": "", "costo": 775.0, "venta": 900.0, "stock": 15.0, "stockMin": 5}, {"id": 1748000000015, "nombre": "Caramelos", "cat": "", "costo": 7.7, "venta": 10.0, "stock": 79.0, "stockMin": 5}, {"id": 1748000000016, "nombre": "Caramelos de menta", "cat": "", "costo": 8.0, "venta": 10.0, "stock": 45.0, "stockMin": 5}, {"id": 1748000000017, "nombre": "Caramelos Frutas", "cat": "", "costo": 12.5, "venta": 15.0, "stock": 44.0, "stockMin": 5}, {"id": 1748000000018, "nombre": "Caritas", "cat": "", "costo": 35.0, "venta": 50.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000019, "nombre": "Cerveza Brew Star", "cat": "", "costo": 230.0, "venta": 300.0, "stock": 18.0, "stockMin": 5}, {"id": 1748000000020, "nombre": "Cerveza Hollandia importada", "cat": "", "costo": 250.0, "venta": 300.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000021, "nombre": "Cerveza Royal Duque", "cat": "", "costo": 205.0, "venta": 280.0, "stock": 18.0, "stockMin": 5}, {"id": 1748000000022, "nombre": "Chicles", "cat": "", "costo": 15.0, "venta": 20.0, "stock": 52.0, "stockMin": 5}, {"id": 1748000000023, "nombre": "Chuchupa chicle", "cat": "", "costo": 15.0, "venta": 30.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000024, "nombre": "Chupa Chupa", "cat": "", "costo": 40.0, "venta": 50.0, "stock": 35.0, "stockMin": 5}, {"id": 1748000000025, "nombre": "Cigarro suelto Englisman menta", "cat": "", "costo": 26.0, "venta": 50.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000026, "nombre": "Cigarro suelto H.upman sin filtro", "cat": "", "costo": 20.0, "venta": 30.0, "stock": 1.0, "stockMin": 5}, {"id": 1748000000027, "nombre": "Cigarro suelto popular azul", "cat": "", "costo": 16.0, "venta": 25.0, "stock": 13.0, "stockMin": 5}, {"id": 1748000000028, "nombre": "Cigarro suelto Popular rojo", "cat": "", "costo": 20.0, "venta": 30.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000029, "nombre": "Cigarros suelto Englishman menta gordo", "cat": "", "costo": 25.0, "venta": 50.0, "stock": 10.0, "stockMin": 5}, {"id": 1748000000030, "nombre": "CigarrosEnglishman menta gordo", "cat": "", "costo": 500.0, "venta": 700.0, "stock": 10.0, "stockMin": 5}, {"id": 1748000000031, "nombre": "Coditos", "cat": "", "costo": 295.0, "venta": 350.0, "stock": 7.0, "stockMin": 5}, {"id": 1748000000032, "nombre": "Cuadritos de pollo", "cat": "", "costo": 25.0, "venta": 40.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000033, "nombre": "Cuadritos de res", "cat": "", "costo": 25.0, "venta": 40.0, "stock": 124.0, "stockMin": 5}, {"id": 1748000000034, "nombre": "Dulce Enroscado", "cat": "", "costo": 120.0, "venta": 150.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000035, "nombre": "Empanadillas", "cat": "", "costo": 90.0, "venta": 120.0, "stock": 43.0, "stockMin": 5}, {"id": 1748000000036, "nombre": "Energizante", "cat": "", "costo": 260.0, "venta": 320.0, "stock": 11.0, "stockMin": 5}, {"id": 1748000000037, "nombre": "Energizante Doping", "cat": "", "costo": 270.0, "venta": 320.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000038, "nombre": "Espaguetti 500g", "cat": "", "costo": 250.0, "venta": 330.0, "stock": 5.0, "stockMin": 5}, {"id": 1748000000039, "nombre": "Fideos", "cat": "", "costo": 150.0, "venta": 200.0, "stock": 7.0, "stockMin": 5}, {"id": 1748000000040, "nombre": "Fosforeras", "cat": "", "costo": 120.0, "venta": 160.0, "stock": 33.0, "stockMin": 5}, {"id": 1748000000041, "nombre": "Frijol Bayo", "cat": "", "costo": 750.0, "venta": 850.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000042, "nombre": "Frijol negro", "cat": "", "costo": 700.0, "venta": 800.0, "stock": 3.0, "stockMin": 5}, {"id": 1748000000043, "nombre": "Galleta de soda sueltas", "cat": "", "costo": 65.0, "venta": 100.0, "stock": 4.0, "stockMin": 5}, {"id": 1748000000044, "nombre": "Galletas crookies", "cat": "", "costo": 60.0, "venta": 90.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000045, "nombre": "Galletas de leche milk", "cat": "", "costo": 75.0, "venta": 100.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000046, "nombre": "Galletas de soda", "cat": "", "costo": 385.0, "venta": 600.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000047, "nombre": "Galletas Golozeta", "cat": "", "costo": 67.0, "venta": 90.0, "stock": 10.0, "stockMin": 5}, {"id": 1748000000048, "nombre": "Galletas Hola", "cat": "", "costo": 150.0, "venta": 200.0, "stock": 6.0, "stockMin": 5}, {"id": 1748000000049, "nombre": "Galletas kremali", "cat": "", "costo": 110.0, "venta": 130.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000050, "nombre": "Galletas Lamore", "cat": "", "costo": 135.0, "venta": 180.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000051, "nombre": "Galletas marie", "cat": "", "costo": 250.0, "venta": 330.0, "stock": 2.0, "stockMin": 5}, {"id": 1748000000052, "nombre": "Galletas milk", "cat": "", "costo": 85.0, "venta": 110.0, "stock": 5.0, "stockMin": 5}, {"id": 1748000000053, "nombre": "Galletas Monro", "cat": "", "costo": 145.0, "venta": 190.0, "stock": 1.0, "stockMin": 5}, {"id": 1748000000054, "nombre": "Galletas Romo", "cat": "", "costo": 135.0, "venta": 180.0, "stock": 19.0, "stockMin": 5}, {"id": 1748000000055, "nombre": "Galletas saladas criollas", "cat": "", "costo": 500.0, "venta": 600.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000056, "nombre": "Galleticas Twinnies", "cat": "", "costo": 58.33, "venta": 80.0, "stock": 7.0, "stockMin": 5}, {"id": 1748000000057, "nombre": "Gelatina", "cat": "", "costo": 250.0, "venta": 300.0, "stock": 7.0, "stockMin": 5}, {"id": 1748000000058, "nombre": "Helado barquilla pequeña", "cat": "", "costo": 55.0, "venta": 80.0, "stock": 36.0, "stockMin": 5}, {"id": 1748000000059, "nombre": "Jabas de nylon", "cat": "", "costo": 6.0, "venta": 15.0, "stock": 55.0, "stockMin": 5}, {"id": 1748000000060, "nombre": "Jugo de cajita", "cat": "", "costo": 150.0, "venta": 220.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000061, "nombre": "Jugo de cajita2", "cat": "", "costo": 190.0, "venta": 220.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000062, "nombre": "Jugo de cajita3", "cat": "", "costo": 170.0, "venta": 220.0, "stock": 7.0, "stockMin": 5}, {"id": 1748000000063, "nombre": "Leche Condensada", "cat": "", "costo": 470.0, "venta": 520.0, "stock": 7.0, "stockMin": 5}, {"id": 1748000000064, "nombre": "Malta morena", "cat": "", "costo": 250.0, "venta": 300.0, "stock": 13.0, "stockMin": 5}, {"id": 1748000000065, "nombre": "Malta Santa Isabel", "cat": "", "costo": 300.0, "venta": 390.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000066, "nombre": "Malta Velga", "cat": "", "costo": 300.0, "venta": 380.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000067, "nombre": "Mani en grano", "cat": "", "costo": 90.0, "venta": 120.0, "stock": 12.0, "stockMin": 5}, {"id": 1748000000068, "nombre": "Mani Molido", "cat": "", "costo": 90.0, "venta": 120.0, "stock": 14.0, "stockMin": 5}, {"id": 1748000000069, "nombre": "Mani molido grande", "cat": "", "costo": 280.0, "venta": 350.0, "stock": 3.0, "stockMin": 5}, {"id": 1748000000070, "nombre": "Menta plus DE SABORES", "cat": "", "costo": 85.0, "venta": 120.0, "stock": 26.0, "stockMin": 5}, {"id": 1748000000071, "nombre": "Merenguito", "cat": "", "costo": 40.0, "venta": 60.0, "stock": 22.0, "stockMin": 5}, {"id": 1748000000072, "nombre": "Mister Potato", "cat": "", "costo": 750.0, "venta": 1000.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000073, "nombre": "Paparica", "cat": "", "costo": 720.0, "venta": 900.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000074, "nombre": "Pasta de tomate 400g", "cat": "", "costo": 330.0, "venta": 420.0, "stock": 4.0, "stockMin": 5}, {"id": 1748000000075, "nombre": "Pellys", "cat": "", "costo": 130.0, "venta": 160.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000076, "nombre": "Peter Diez", "cat": "", "costo": 110.0, "venta": 160.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000077, "nombre": "Pinta lenguas", "cat": "", "costo": 13.0, "venta": 30.0, "stock": 48.0, "stockMin": 5}, {"id": 1748000000078, "nombre": "Refresco de lata  Naranja", "cat": "", "costo": 245.0, "venta": 300.0, "stock": 5.0, "stockMin": 5}, {"id": 1748000000079, "nombre": "Refresco de lata  Piña", "cat": "", "costo": 245.0, "venta": 300.0, "stock": 15.0, "stockMin": 5}, {"id": 1748000000080, "nombre": "Refresco de lata Cola", "cat": "", "costo": 250.0, "venta": 300.0, "stock": 4.0, "stockMin": 5}, {"id": 1748000000081, "nombre": "Refresco de lata Limón", "cat": "", "costo": 245.0, "venta": 300.0, "stock": 8.0, "stockMin": 5}, {"id": 1748000000082, "nombre": "Refresco de lata Manzana", "cat": "", "costo": 250.0, "venta": 300.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000083, "nombre": "Refresco de paquetico fresa", "cat": "", "costo": 30.0, "venta": 50.0, "stock": 9.0, "stockMin": 5}, {"id": 1748000000084, "nombre": "Refresco Lissa Cocktail", "cat": "", "costo": 30.0, "venta": 50.0, "stock": 11.0, "stockMin": 5}, {"id": 1748000000085, "nombre": "Refresco Lissa Piña", "cat": "", "costo": 30.0, "venta": 50.0, "stock": 5.0, "stockMin": 5}, {"id": 1748000000086, "nombre": "Refresco Lissa Uva", "cat": "", "costo": 30.0, "venta": 50.0, "stock": 6.0, "stockMin": 5}, {"id": 1748000000087, "nombre": "Refresco paquetico luminy coco", "cat": "", "costo": 30.0, "venta": 50.0, "stock": 17.0, "stockMin": 5}, {"id": 1748000000088, "nombre": "Refresco Paquetico Luminy Manzana", "cat": "", "costo": 30.0, "venta": 50.0, "stock": 15.0, "stockMin": 5}, {"id": 1748000000089, "nombre": "Refresco vaso", "cat": "", "costo": 5.0, "venta": 15.0, "stock": 2.0, "stockMin": 5}, {"id": 1748000000090, "nombre": "Refrescos Paquetico Luminy Limón", "cat": "", "costo": 30.0, "venta": 50.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000091, "nombre": "Refrescos Paquetico Luminy Naranja", "cat": "", "costo": 30.0, "venta": 50.0, "stock": 4.0, "stockMin": 5}, {"id": 1748000000092, "nombre": "Ron Cubay", "cat": "", "costo": 390.0, "venta": 500.0, "stock": 25.0, "stockMin": 5}, {"id": 1748000000093, "nombre": "Rosquita criolla", "cat": "", "costo": 60.0, "venta": 80.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000094, "nombre": "Sal", "cat": "", "costo": 500.0, "venta": 550.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000095, "nombre": "Salchicas", "cat": "", "costo": 530.0, "venta": 650.0, "stock": 24.0, "stockMin": 5}, {"id": 1748000000096, "nombre": "Sandias", "cat": "", "costo": 35.0, "venta": 50.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000097, "nombre": "Sazon fresko", "cat": "", "costo": 38.0, "venta": 50.0, "stock": 11.0, "stockMin": 5}, {"id": 1748000000098, "nombre": "Sopa Instantanea", "cat": "", "costo": 155.0, "venta": 200.0, "stock": 30.0, "stockMin": 5}, {"id": 1748000000099, "nombre": "Sorbeto Borello", "cat": "", "costo": 90.0, "venta": 130.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000100, "nombre": "Sorbeto Crespo", "cat": "", "costo": 70.0, "venta": 110.0, "stock": 1.0, "stockMin": 5}, {"id": 1748000000101, "nombre": "Sorbeto Maribu", "cat": "", "costo": 150.0, "venta": 200.0, "stock": 2.0, "stockMin": 5}, {"id": 1748000000102, "nombre": "Sorbetos wandy", "cat": "", "costo": 90.0, "venta": 130.0, "stock": 7.0, "stockMin": 5}, {"id": 1748000000103, "nombre": "Vaso de Helado 2 bolas", "cat": "", "costo": 100.0, "venta": 130.0, "stock": 22.0, "stockMin": 5}, {"id": 1748000000104, "nombre": "Vaso de Helado 3 bolas", "cat": "", "costo": 145.0, "venta": 200.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000105, "nombre": "Vino 1 litro", "cat": "", "costo": 450.0, "venta": 550.0, "stock": 3.0, "stockMin": 5}, {"id": 1748000000106, "nombre": "Vino dulce", "cat": "", "costo": 300.0, "venta": 350.0, "stock": 0.0, "stockMin": 5}, {"id": 1748000000107, "nombre": "vodka", "cat": "", "costo": 1350.0, "venta": 1700.0, "stock": 2.0, "stockMin": 5}], "movimientos": [{"tipo": "cierre", "fecha": "2026-06-01", "ts": 1748000099999, "desc": "Cierre importado 2026-06-01", "total": 14335.0}, {"tipo": "cierre", "fecha": "2026-06-02", "ts": 1748000099999, "desc": "Cierre importado 2026-06-02", "total": 10600.0}], "dias": {"2026-06-01": {"invInicial": {"1748000000000": {"qty": 13.0, "costo": 90.0, "venta": 120.0}, "1748000000001": {"qty": 10.0, "costo": 590.0, "venta": 650.0}, "1748000000002": {"qty": 0.0, "costo": 626.0, "venta": 700.0}, "1748000000003": {"qty": 17.0, "costo": 100.0, "venta": 130.0}, "1748000000004": {"qty": 0.0, "costo": 37.0, "venta": 50.0}, "1748000000005": {"qty": 0.0, "costo": 15.0, "venta": 30.0}, "1748000000006": {"qty": 0.0, "costo": 1750.0, "venta": 2200.0}, "1748000000007": {"qty": 0.0, "costo": 720.0, "venta": 800.0}, "1748000000008": {"qty": 1.0, "costo": 520.0, "venta": 650.0}, "1748000000009": {"qty": 0.0, "costo": 400.0, "venta": 500.0}, "1748000000010": {"qty": 0.0, "costo": 380.0, "venta": 450.0}, "1748000000011": {"qty": 7.0, "costo": 320.0, "venta": 450.0}, "1748000000012": {"qty": 1.0, "costo": 390.0, "venta": 500.0}, "1748000000013": {"qty": 0.0, "costo": 380.0, "venta": 450.0}, "1748000000014": {"qty": 15.0, "costo": 775.0, "venta": 900.0}, "1748000000015": {"qty": 97.0, "costo": 7.7, "venta": 10.0}, "1748000000016": {"qty": 52.0, "costo": 8.0, "venta": 10.0}, "1748000000017": {"qty": 44.0, "costo": 12.5, "venta": 15.0}, "1748000000018": {"qty": 0.0, "costo": 35.0, "venta": 50.0}, "1748000000019": {"qty": 19.0, "costo": 230.0, "venta": 300.0}, "1748000000020": {"qty": 0.0, "costo": 250.0, "venta": 300.0}, "1748000000021": {"qty": 19.0, "costo": 205.0, "venta": 280.0}, "1748000000022": {"qty": 52.0, "costo": 15.0, "venta": 20.0}, "1748000000023": {"qty": 0.0, "costo": 15.0, "venta": 30.0}, "1748000000024": {"qty": 36.0, "costo": 40.0, "venta": 50.0}, "1748000000025": {"qty": 0.0, "costo": 26.0, "venta": 50.0}, "1748000000026": {"qty": 1.0, "costo": 20.0, "venta": 30.0}, "1748000000027": {"qty": 14.0, "costo": 16.0, "venta": 25.0}, "1748000000028": {"qty": 0.0, "costo": 20.0, "venta": 30.0}, "1748000000029": {"qty": 17.0, "costo": 25.0, "venta": 50.0}, "1748000000030": {"qty": 11.0, "costo": 500.0, "venta": 700.0}, "1748000000031": {"qty": 8.0, "costo": 295.0, "venta": 350.0}, "1748000000032": {"qty": 0.0, "costo": 25.0, "venta": 40.0}, "1748000000033": {"qty": 124.0, "costo": 25.0, "venta": 40.0}, "1748000000034": {"qty": 0.0, "costo": 120.0, "venta": 150.0}, "1748000000035": {"qty": 0.0, "costo": 90.0, "venta": 120.0}, "1748000000036": {"qty": 11.0, "costo": 260.0, "venta": 320.0}, "1748000000037": {"qty": 0.0, "costo": 270.0, "venta": 320.0}, "1748000000038": {"qty": 6.0, "costo": 250.0, "venta": 330.0}, "1748000000039": {"qty": 7.0, "costo": 150.0, "venta": 200.0}, "1748000000040": {"qty": 33.0, "costo": 120.0, "venta": 160.0}, "1748000000041": {"qty": 0.0, "costo": 750.0, "venta": 850.0}, "1748000000042": {"qty": 3.0, "costo": 700.0, "venta": 800.0}, "1748000000043": {"qty": 4.0, "costo": 65.0, "venta": 100.0}, "1748000000044": {"qty": 0.0, "costo": 60.0, "venta": 90.0}, "1748000000045": {"qty": 0.0, "costo": 75.0, "venta": 100.0}, "1748000000046": {"qty": 0.0, "costo": 385.0, "venta": 600.0}, "1748000000047": {"qty": 12.0, "costo": 67.0, "venta": 90.0}, "1748000000048": {"qty": 7.0, "costo": 150.0, "venta": 200.0}, "1748000000049": {"qty": 0.0, "costo": 110.0, "venta": 130.0}, "1748000000050": {"qty": 0.0, "costo": 135.0, "venta": 180.0}, "1748000000051": {"qty": 3.0, "costo": 250.0, "venta": 330.0}, "1748000000052": {"qty": 10.0, "costo": 85.0, "venta": 110.0}, "1748000000053": {"qty": 1.0, "costo": 145.0, "venta": 190.0}, "1748000000054": {"qty": 23.0, "costo": 135.0, "venta": 180.0}, "1748000000055": {"qty": 0.0, "costo": 500.0, "venta": 600.0}, "1748000000056": {"qty": 7.0, "costo": 58.33, "venta": 80.0}, "1748000000057": {"qty": 7.0, "costo": 250.0, "venta": 300.0}, "1748000000058": {"qty": 49.0, "costo": 55.0, "venta": 80.0}, "1748000000059": {"qty": 58.0, "costo": 6.0, "venta": 15.0}, "1748000000060": {"qty": 0.0, "costo": 150.0, "venta": 220.0}, "1748000000061": {"qty": 0.0, "costo": 190.0, "venta": 220.0}, "1748000000062": {"qty": 13.0, "costo": 170.0, "venta": 220.0}, "1748000000063": {"qty": 7.0, "costo": 470.0, "venta": 520.0}, "1748000000064": {"qty": 15.0, "costo": 250.0, "venta": 300.0}, "1748000000065": {"qty": 0.0, "costo": 300.0, "venta": 390.0}, "1748000000066": {"qty": 0.0, "costo": 300.0, "venta": 380.0}, "1748000000067": {"qty": 13.0, "costo": 90.0, "venta": 120.0}, "1748000000068": {"qty": 14.0, "costo": 90.0, "venta": 120.0}, "1748000000069": {"qty": 3.0, "costo": 280.0, "venta": 350.0}, "1748000000070": {"qty": 29.0, "costo": 85.0, "venta": 120.0}, "1748000000071": {"qty": 0.0, "costo": 40.0, "venta": 60.0}, "1748000000072": {"qty": 0.0, "costo": 750.0, "venta": 1000.0}, "1748000000073": {"qty": 0.0, "costo": 720.0, "venta": 900.0}, "1748000000074": {"qty": 4.0, "costo": 330.0, "venta": 420.0}, "1748000000075": {"qty": 0.0, "costo": 130.0, "venta": 160.0}, "1748000000076": {"qty": 0.0, "costo": 110.0, "venta": 160.0}, "1748000000077": {"qty": 6.0, "costo": 13.0, "venta": 30.0}, "1748000000078": {"qty": 6.0, "costo": 245.0, "venta": 300.0}, "1748000000079": {"qty": 16.0, "costo": 245.0, "venta": 300.0}, "1748000000080": {"qty": 7.0, "costo": 250.0, "venta": 300.0}, "1748000000081": {"qty": 8.0, "costo": 245.0, "venta": 300.0}, "1748000000082": {"qty": 0.0, "costo": 250.0, "venta": 300.0}, "1748000000083": {"qty": 9.0, "costo": 30.0, "venta": 50.0}, "1748000000084": {"qty": 11.0, "costo": 30.0, "venta": 50.0}, "1748000000085": {"qty": 5.0, "costo": 30.0, "venta": 50.0}, "1748000000086": {"qty": 6.0, "costo": 30.0, "venta": 50.0}, "1748000000087": {"qty": 17.0, "costo": 30.0, "venta": 50.0}, "1748000000088": {"qty": 15.0, "costo": 30.0, "venta": 50.0}, "1748000000089": {"qty": 13.0, "costo": 5.0, "venta": 15.0}, "1748000000090": {"qty": 0.0, "costo": 30.0, "venta": 50.0}, "1748000000091": {"qty": 6.0, "costo": 30.0, "venta": 50.0}, "1748000000092": {"qty": 25.0, "costo": 390.0, "venta": 500.0}, "1748000000093": {"qty": 0.0, "costo": 60.0, "venta": 80.0}, "1748000000094": {"qty": 0.0, "costo": 500.0, "venta": 550.0}, "1748000000095": {"qty": 24.0, "costo": 530.0, "venta": 650.0}, "1748000000096": {"qty": 0.0, "costo": 35.0, "venta": 50.0}, "1748000000097": {"qty": 13.0, "costo": 38.0, "venta": 50.0}, "1748000000098": {"qty": 31.0, "costo": 155.0, "venta": 200.0}, "1748000000099": {"qty": 0.0, "costo": 90.0, "venta": 130.0}, "1748000000100": {"qty": 3.0, "costo": 70.0, "venta": 110.0}, "1748000000101": {"qty": 2.0, "costo": 150.0, "venta": 200.0}, "1748000000102": {"qty": 9.0, "costo": 90.0, "venta": 130.0}, "1748000000103": {"qty": 25.0, "costo": 100.0, "venta": 130.0}, "1748000000104": {"qty": 0.0, "costo": 145.0, "venta": 200.0}, "1748000000105": {"qty": 4.0, "costo": 450.0, "venta": 550.0}, "1748000000106": {"qty": 0.0, "costo": 300.0, "venta": 350.0}, "1748000000107": {"qty": 2.0, "costo": 1350.0, "venta": 1700.0}}, "invFinal": {"1748000000000": {"qty": 13.0, "costo": 90.0, "venta": 120.0}, "1748000000001": {"qty": 7.0, "costo": 590.0, "venta": 650.0}, "1748000000002": {"qty": 0.0, "costo": 626.0, "venta": 700.0}, "1748000000003": {"qty": 17.0, "costo": 100.0, "venta": 130.0}, "1748000000004": {"qty": 0.0, "costo": 37.0, "venta": 50.0}, "1748000000005": {"qty": 0.0, "costo": 15.0, "venta": 30.0}, "1748000000006": {"qty": 0.0, "costo": 1750.0, "venta": 2200.0}, "1748000000007": {"qty": 0.0, "costo": 720.0, "venta": 800.0}, "1748000000008": {"qty": 1.0, "costo": 520.0, "venta": 650.0}, "1748000000009": {"qty": 0.0, "costo": 400.0, "venta": 500.0}, "1748000000010": {"qty": 0.0, "costo": 380.0, "venta": 450.0}, "1748000000011": {"qty": 7.0, "costo": 320.0, "venta": 450.0}, "1748000000012": {"qty": 1.0, "costo": 390.0, "venta": 500.0}, "1748000000013": {"qty": 0.0, "costo": 380.0, "venta": 450.0}, "1748000000014": {"qty": 15.0, "costo": 775.0, "venta": 900.0}, "1748000000015": {"qty": 79.0, "costo": 7.7, "venta": 10.0}, "1748000000016": {"qty": 45.0, "costo": 8.0, "venta": 10.0}, "1748000000017": {"qty": 44.0, "costo": 12.5, "venta": 15.0}, "1748000000018": {"qty": 0.0, "costo": 35.0, "venta": 50.0}, "1748000000019": {"qty": 18.0, "costo": 230.0, "venta": 300.0}, "1748000000020": {"qty": 0.0, "costo": 250.0, "venta": 300.0}, "1748000000021": {"qty": 18.0, "costo": 205.0, "venta": 280.0}, "1748000000022": {"qty": 52.0, "costo": 15.0, "venta": 20.0}, "1748000000023": {"qty": 0.0, "costo": 15.0, "venta": 30.0}, "1748000000024": {"qty": 35.0, "costo": 40.0, "venta": 50.0}, "1748000000025": {"qty": 0.0, "costo": 26.0, "venta": 50.0}, "1748000000026": {"qty": 1.0, "costo": 20.0, "venta": 30.0}, "1748000000027": {"qty": 13.0, "costo": 16.0, "venta": 25.0}, "1748000000028": {"qty": 0.0, "costo": 20.0, "venta": 30.0}, "1748000000029": {"qty": 10.0, "costo": 25.0, "venta": 50.0}, "1748000000030": {"qty": 10.0, "costo": 500.0, "venta": 700.0}, "1748000000031": {"qty": 7.0, "costo": 295.0, "venta": 350.0}, "1748000000032": {"qty": 0.0, "costo": 25.0, "venta": 40.0}, "1748000000033": {"qty": 124.0, "costo": 25.0, "venta": 40.0}, "1748000000034": {"qty": 0.0, "costo": 120.0, "venta": 150.0}, "1748000000035": {"qty": 43.0, "costo": 90.0, "venta": 120.0}, "1748000000036": {"qty": 11.0, "costo": 260.0, "venta": 320.0}, "1748000000037": {"qty": 0.0, "costo": 270.0, "venta": 320.0}, "1748000000038": {"qty": 5.0, "costo": 250.0, "venta": 330.0}, "1748000000039": {"qty": 7.0, "costo": 150.0, "venta": 200.0}, "1748000000040": {"qty": 33.0, "costo": 120.0, "venta": 160.0}, "1748000000041": {"qty": 0.0, "costo": 750.0, "venta": 850.0}, "1748000000042": {"qty": 3.0, "costo": 700.0, "venta": 800.0}, "1748000000043": {"qty": 4.0, "costo": 65.0, "venta": 100.0}, "1748000000044": {"qty": 0.0, "costo": 60.0, "venta": 90.0}, "1748000000045": {"qty": 0.0, "costo": 75.0, "venta": 100.0}, "1748000000046": {"qty": 0.0, "costo": 385.0, "venta": 600.0}, "1748000000047": {"qty": 10.0, "costo": 67.0, "venta": 90.0}, "1748000000048": {"qty": 6.0, "costo": 150.0, "venta": 200.0}, "1748000000049": {"qty": 0.0, "costo": 110.0, "venta": 130.0}, "1748000000050": {"qty": 0.0, "costo": 135.0, "venta": 180.0}, "1748000000051": {"qty": 2.0, "costo": 250.0, "venta": 330.0}, "1748000000052": {"qty": 5.0, "costo": 85.0, "venta": 110.0}, "1748000000053": {"qty": 1.0, "costo": 145.0, "venta": 190.0}, "1748000000054": {"qty": 19.0, "costo": 135.0, "venta": 180.0}, "1748000000055": {"qty": 0.0, "costo": 500.0, "venta": 600.0}, "1748000000056": {"qty": 7.0, "costo": 58.33, "venta": 80.0}, "1748000000057": {"qty": 7.0, "costo": 250.0, "venta": 300.0}, "1748000000058": {"qty": 36.0, "costo": 55.0, "venta": 80.0}, "1748000000059": {"qty": 55.0, "costo": 6.0, "venta": 15.0}, "1748000000060": {"qty": 0.0, "costo": 150.0, "venta": 220.0}, "1748000000061": {"qty": 0.0, "costo": 190.0, "venta": 220.0}, "1748000000062": {"qty": 7.0, "costo": 170.0, "venta": 220.0}, "1748000000063": {"qty": 7.0, "costo": 470.0, "venta": 520.0}, "1748000000064": {"qty": 13.0, "costo": 250.0, "venta": 300.0}, "1748000000065": {"qty": 0.0, "costo": 300.0, "venta": 390.0}, "1748000000066": {"qty": 0.0, "costo": 300.0, "venta": 380.0}, "1748000000067": {"qty": 12.0, "costo": 90.0, "venta": 120.0}, "1748000000068": {"qty": 14.0, "costo": 90.0, "venta": 120.0}, "1748000000069": {"qty": 3.0, "costo": 280.0, "venta": 350.0}, "1748000000070": {"qty": 26.0, "costo": 85.0, "venta": 120.0}, "1748000000071": {"qty": 22.0, "costo": 40.0, "venta": 60.0}, "1748000000072": {"qty": 0.0, "costo": 750.0, "venta": 1000.0}, "1748000000073": {"qty": 0.0, "costo": 720.0, "venta": 900.0}, "1748000000074": {"qty": 4.0, "costo": 330.0, "venta": 420.0}, "1748000000075": {"qty": 0.0, "costo": 130.0, "venta": 160.0}, "1748000000076": {"qty": 0.0, "costo": 110.0, "venta": 160.0}, "1748000000077": {"qty": 48.0, "costo": 13.0, "venta": 30.0}, "1748000000078": {"qty": 5.0, "costo": 245.0, "venta": 300.0}, "1748000000079": {"qty": 15.0, "costo": 245.0, "venta": 300.0}, "1748000000080": {"qty": 4.0, "costo": 250.0, "venta": 300.0}, "1748000000081": {"qty": 8.0, "costo": 245.0, "venta": 300.0}, "1748000000082": {"qty": 0.0, "costo": 250.0, "venta": 300.0}, "1748000000083": {"qty": 9.0, "costo": 30.0, "venta": 50.0}, "1748000000084": {"qty": 11.0, "costo": 30.0, "venta": 50.0}, "1748000000085": {"qty": 5.0, "costo": 30.0, "venta": 50.0}, "1748000000086": {"qty": 6.0, "costo": 30.0, "venta": 50.0}, "1748000000087": {"qty": 17.0, "costo": 30.0, "venta": 50.0}, "1748000000088": {"qty": 15.0, "costo": 30.0, "venta": 50.0}, "1748000000089": {"qty": 2.0, "costo": 5.0, "venta": 15.0}, "1748000000090": {"qty": 0.0, "costo": 30.0, "venta": 50.0}, "1748000000091": {"qty": 4.0, "costo": 30.0, "venta": 50.0}, "1748000000092": {"qty": 25.0, "costo": 390.0, "venta": 500.0}, "1748000000093": {"qty": 0.0, "costo": 60.0, "venta": 80.0}, "1748000000094": {"qty": 0.0, "costo": 500.0, "venta": 550.0}, "1748000000095": {"qty": 24.0, "costo": 530.0, "venta": 650.0}, "1748000000096": {"qty": 0.0, "costo": 35.0, "venta": 50.0}, "1748000000097": {"qty": 11.0, "costo": 38.0, "venta": 50.0}, "1748000000098": {"qty": 30.0, "costo": 155.0, "venta": 200.0}, "1748000000099": {"qty": 0.0, "costo": 90.0, "venta": 130.0}, "1748000000100": {"qty": 1.0, "costo": 70.0, "venta": 110.0}, "1748000000101": {"qty": 2.0, "costo": 150.0, "venta": 200.0}, "1748000000102": {"qty": 7.0, "costo": 90.0, "venta": 130.0}, "1748000000103": {"qty": 22.0, "costo": 100.0, "venta": 130.0}, "1748000000104": {"qty": 0.0, "costo": 145.0, "venta": 200.0}, "1748000000105": {"qty": 3.0, "costo": 450.0, "venta": 550.0}, "1748000000106": {"qty": 0.0, "costo": 300.0, "venta": 350.0}, "1748000000107": {"qty": 2.0, "costo": 1350.0, "venta": 1700.0}}, "ventas": [], "entradas": [{"prodId": 1748000000035, "qty": 43.0, "costo": 90.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000036}, {"prodId": 1748000000071, "qty": 28.0, "costo": 40.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000072}, {"prodId": 1748000000077, "qty": 53.0, "costo": 13.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000078}, {"prodId": 1748000000089, "qty": 14.0, "costo": 5.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000090}], "mermas": [], "transferencias": [{"prodId": 1748000000091, "qty": 2.0, "tipo": "salida", "costo": 30.0, "obs": "Importado Excel", "ts": 1748000000092}], "gastos": [], "cerrado": true, "efectivo": 0, "transfer": 0}, "2026-06-02": {"invInicial": {"1748000000000": {"qty": 13.0, "costo": 90.0, "venta": 120.0}, "1748000000001": {"qty": 7.0, "costo": 590.0, "venta": 650.0}, "1748000000002": {"qty": 0.0, "costo": 626.0, "venta": 700.0}, "1748000000003": {"qty": 17.0, "costo": 100.0, "venta": 130.0}, "1748000000004": {"qty": 0.0, "costo": 37.0, "venta": 50.0}, "1748000000005": {"qty": 0.0, "costo": 15.0, "venta": 30.0}, "1748000000006": {"qty": 0.0, "costo": 1750.0, "venta": 2200.0}, "1748000000007": {"qty": 0.0, "costo": 720.0, "venta": 800.0}, "1748000000008": {"qty": 1.0, "costo": 520.0, "venta": 650.0}, "1748000000009": {"qty": 0.0, "costo": 400.0, "venta": 500.0}, "1748000000010": {"qty": 0.0, "costo": 380.0, "venta": 450.0}, "1748000000011": {"qty": 7.0, "costo": 320.0, "venta": 450.0}, "1748000000012": {"qty": 1.0, "costo": 390.0, "venta": 500.0}, "1748000000013": {"qty": 0.0, "costo": 380.0, "venta": 450.0}, "1748000000014": {"qty": 15.0, "costo": 775.0, "venta": 900.0}, "1748000000015": {"qty": 79.0, "costo": 7.7, "venta": 10.0}, "1748000000016": {"qty": 45.0, "costo": 8.0, "venta": 15.0}, "1748000000017": {"qty": 44.0, "costo": 12.5, "venta": 15.0}, "1748000000018": {"qty": 0.0, "costo": 35.0, "venta": 50.0}, "1748000000019": {"qty": 18.0, "costo": 230.0, "venta": 300.0}, "1748000000020": {"qty": 0.0, "costo": 250.0, "venta": 300.0}, "1748000000021": {"qty": 18.0, "costo": 205.0, "venta": 280.0}, "1748000000022": {"qty": 52.0, "costo": 15.0, "venta": 20.0}, "1748000000023": {"qty": 0.0, "costo": 15.0, "venta": 30.0}, "1748000000024": {"qty": 35.0, "costo": 40.0, "venta": 50.0}, "1748000000025": {"qty": 0.0, "costo": 26.0, "venta": 50.0}, "1748000000026": {"qty": 1.0, "costo": 20.0, "venta": 30.0}, "1748000000027": {"qty": 13.0, "costo": 16.0, "venta": 25.0}, "1748000000028": {"qty": 0.0, "costo": 20.0, "venta": 30.0}, "1748000000029": {"qty": 10.0, "costo": 25.0, "venta": 50.0}, "1748000000030": {"qty": 10.0, "costo": 500.0, "venta": 700.0}, "1748000000031": {"qty": 7.0, "costo": 295.0, "venta": 350.0}, "1748000000032": {"qty": 0.0, "costo": 25.0, "venta": 40.0}, "1748000000033": {"qty": 124.0, "costo": 25.0, "venta": 40.0}, "1748000000034": {"qty": 0.0, "costo": 130.0, "venta": 150.0}, "1748000000035": {"qty": 43.0, "costo": 90.0, "venta": 120.0}, "1748000000036": {"qty": 11.0, "costo": 260.0, "venta": 320.0}, "1748000000037": {"qty": 0.0, "costo": 270.0, "venta": 320.0}, "1748000000038": {"qty": 5.0, "costo": 250.0, "venta": 330.0}, "1748000000039": {"qty": 7.0, "costo": 150.0, "venta": 200.0}, "1748000000040": {"qty": 33.0, "costo": 120.0, "venta": 160.0}, "1748000000041": {"qty": 0.0, "costo": 750.0, "venta": 850.0}, "1748000000042": {"qty": 3.0, "costo": 700.0, "venta": 800.0}, "1748000000043": {"qty": 4.0, "costo": 65.0, "venta": 100.0}, "1748000000044": {"qty": 0.0, "costo": 60.0, "venta": 90.0}, "1748000000045": {"qty": 0.0, "costo": 75.0, "venta": 100.0}, "1748000000046": {"qty": 0.0, "costo": 385.0, "venta": 600.0}, "1748000000047": {"qty": 10.0, "costo": 67.0, "venta": 90.0}, "1748000000048": {"qty": 6.0, "costo": 150.0, "venta": 200.0}, "1748000000049": {"qty": 0.0, "costo": 110.0, "venta": 130.0}, "1748000000050": {"qty": 0.0, "costo": 135.0, "venta": 180.0}, "1748000000051": {"qty": 2.0, "costo": 250.0, "venta": 330.0}, "1748000000052": {"qty": 5.0, "costo": 85.0, "venta": 110.0}, "1748000000053": {"qty": 1.0, "costo": 145.0, "venta": 190.0}, "1748000000054": {"qty": 19.0, "costo": 135.0, "venta": 180.0}, "1748000000055": {"qty": 0.0, "costo": 500.0, "venta": 600.0}, "1748000000056": {"qty": 7.0, "costo": 58.33, "venta": 80.0}, "1748000000057": {"qty": 7.0, "costo": 250.0, "venta": 300.0}, "1748000000058": {"qty": 36.0, "costo": 55.0, "venta": 80.0}, "1748000000059": {"qty": 55.0, "costo": 6.0, "venta": 15.0}, "1748000000060": {"qty": 0.0, "costo": 150.0, "venta": 220.0}, "1748000000061": {"qty": 0.0, "costo": 190.0, "venta": 220.0}, "1748000000062": {"qty": 7.0, "costo": 170.0, "venta": 220.0}, "1748000000063": {"qty": 7.0, "costo": 470.0, "venta": 520.0}, "1748000000064": {"qty": 13.0, "costo": 250.0, "venta": 300.0}, "1748000000065": {"qty": 0.0, "costo": 300.0, "venta": 390.0}, "1748000000066": {"qty": 0.0, "costo": 300.0, "venta": 380.0}, "1748000000067": {"qty": 12.0, "costo": 90.0, "venta": 120.0}, "1748000000068": {"qty": 14.0, "costo": 90.0, "venta": 120.0}, "1748000000069": {"qty": 3.0, "costo": 280.0, "venta": 350.0}, "1748000000070": {"qty": 26.0, "costo": 85.0, "venta": 120.0}, "1748000000071": {"qty": 22.0, "costo": 40.0, "venta": 60.0}, "1748000000072": {"qty": 0.0, "costo": 750.0, "venta": 1000.0}, "1748000000073": {"qty": 0.0, "costo": 720.0, "venta": 900.0}, "1748000000074": {"qty": 4.0, "costo": 330.0, "venta": 420.0}, "1748000000075": {"qty": 0.0, "costo": 130.0, "venta": 160.0}, "1748000000076": {"qty": 0.0, "costo": 110.0, "venta": 160.0}, "1748000000077": {"qty": 48.0, "costo": 13.0, "venta": 30.0}, "1748000000078": {"qty": 5.0, "costo": 245.0, "venta": 300.0}, "1748000000079": {"qty": 15.0, "costo": 245.0, "venta": 300.0}, "1748000000080": {"qty": 4.0, "costo": 250.0, "venta": 300.0}, "1748000000081": {"qty": 8.0, "costo": 245.0, "venta": 300.0}, "1748000000082": {"qty": 0.0, "costo": 250.0, "venta": 300.0}, "1748000000083": {"qty": 9.0, "costo": 30.0, "venta": 50.0}, "1748000000084": {"qty": 11.0, "costo": 30.0, "venta": 50.0}, "1748000000085": {"qty": 5.0, "costo": 30.0, "venta": 50.0}, "1748000000086": {"qty": 6.0, "costo": 30.0, "venta": 50.0}, "1748000000087": {"qty": 17.0, "costo": 30.0, "venta": 50.0}, "1748000000088": {"qty": 15.0, "costo": 30.0, "venta": 50.0}, "1748000000089": {"qty": 2.0, "costo": 5.0, "venta": 15.0}, "1748000000090": {"qty": 0.0, "costo": 30.0, "venta": 50.0}, "1748000000091": {"qty": 4.0, "costo": 30.0, "venta": 50.0}, "1748000000092": {"qty": 25.0, "costo": 390.0, "venta": 500.0}, "1748000000093": {"qty": 0.0, "costo": 60.0, "venta": 80.0}, "1748000000094": {"qty": 0.0, "costo": 500.0, "venta": 550.0}, "1748000000095": {"qty": 24.0, "costo": 530.0, "venta": 650.0}, "1748000000096": {"qty": 0.0, "costo": 35.0, "venta": 50.0}, "1748000000097": {"qty": 11.0, "costo": 38.0, "venta": 50.0}, "1748000000098": {"qty": 30.0, "costo": 155.0, "venta": 200.0}, "1748000000099": {"qty": 0.0, "costo": 90.0, "venta": 130.0}, "1748000000100": {"qty": 1.0, "costo": 70.0, "venta": 110.0}, "1748000000101": {"qty": 2.0, "costo": 150.0, "venta": 200.0}, "1748000000102": {"qty": 7.0, "costo": 90.0, "venta": 130.0}, "1748000000103": {"qty": 22.0, "costo": 100.0, "venta": 130.0}, "1748000000104": {"qty": 0.0, "costo": 145.0, "venta": 200.0}, "1748000000105": {"qty": 3.0, "costo": 450.0, "venta": 550.0}, "1748000000106": {"qty": 0.0, "costo": 300.0, "venta": 350.0}, "1748000000107": {"qty": 2.0, "costo": 1350.0, "venta": 1700.0}}, "invFinal": {"1748000000000": {"qty": 11.0, "costo": 90.0, "venta": 120.0}, "1748000000001": {"qty": 7.0, "costo": 590.0, "venta": 650.0}, "1748000000002": {"qty": 0.0, "costo": 626.0, "venta": 700.0}, "1748000000003": {"qty": 17.0, "costo": 100.0, "venta": 130.0}, "1748000000004": {"qty": 48.0, "costo": 37.0, "venta": 50.0}, "1748000000005": {"qty": 0.0, "costo": 15.0, "venta": 30.0}, "1748000000006": {"qty": 0.0, "costo": 1750.0, "venta": 2200.0}, "1748000000007": {"qty": 0.0, "costo": 720.0, "venta": 800.0}, "1748000000008": {"qty": 0.0, "costo": 520.0, "venta": 650.0}, "1748000000009": {"qty": 10.0, "costo": 400.0, "venta": 500.0}, "1748000000010": {"qty": 0.0, "costo": 380.0, "venta": 450.0}, "1748000000011": {"qty": 7.0, "costo": 320.0, "venta": 450.0}, "1748000000012": {"qty": 0.0, "costo": 390.0, "venta": 500.0}, "1748000000013": {"qty": 0.0, "costo": 380.0, "venta": 450.0}, "1748000000014": {"qty": 15.0, "costo": 775.0, "venta": 900.0}, "1748000000015": {"qty": 69.0, "costo": 7.7, "venta": 10.0}, "1748000000016": {"qty": 40.0, "costo": 8.0, "venta": 15.0}, "1748000000017": {"qty": 44.0, "costo": 12.5, "venta": 15.0}, "1748000000018": {"qty": 0.0, "costo": 35.0, "venta": 50.0}, "1748000000019": {"qty": 18.0, "costo": 230.0, "venta": 300.0}, "1748000000020": {"qty": 0.0, "costo": 250.0, "venta": 300.0}, "1748000000021": {"qty": 18.0, "costo": 205.0, "venta": 280.0}, "1748000000022": {"qty": 37.0, "costo": 15.0, "venta": 20.0}, "1748000000023": {"qty": 0.0, "costo": 15.0, "venta": 30.0}, "1748000000024": {"qty": 33.0, "costo": 40.0, "venta": 50.0}, "1748000000025": {"qty": 19.0, "costo": 26.0, "venta": 50.0}, "1748000000026": {"qty": 1.0, "costo": 20.0, "venta": 30.0}, "1748000000027": {"qty": 9.0, "costo": 16.0, "venta": 25.0}, "1748000000028": {"qty": 14.0, "costo": 20.0, "venta": 30.0}, "1748000000029": {"qty": 10.0, "costo": 25.0, "venta": 50.0}, "1748000000030": {"qty": 10.0, "costo": 500.0, "venta": 700.0}, "1748000000031": {"qty": 7.0, "costo": 295.0, "venta": 350.0}, "1748000000032": {"qty": 0.0, "costo": 25.0, "venta": 40.0}, "1748000000033": {"qty": 123.0, "costo": 25.0, "venta": 40.0}, "1748000000034": {"qty": 20.0, "costo": 130.0, "venta": 150.0}, "1748000000035": {"qty": 38.0, "costo": 90.0, "venta": 120.0}, "1748000000036": {"qty": 8.0, "costo": 260.0, "venta": 320.0}, "1748000000037": {"qty": 0.0, "costo": 270.0, "venta": 320.0}, "1748000000038": {"qty": 4.0, "costo": 250.0, "venta": 330.0}, "1748000000039": {"qty": 7.0, "costo": 150.0, "venta": 200.0}, "1748000000040": {"qty": 33.0, "costo": 120.0, "venta": 160.0}, "1748000000041": {"qty": 0.0, "costo": 750.0, "venta": 850.0}, "1748000000042": {"qty": 3.0, "costo": 700.0, "venta": 800.0}, "1748000000043": {"qty": 1.0, "costo": 65.0, "venta": 100.0}, "1748000000044": {"qty": 0.0, "costo": 60.0, "venta": 90.0}, "1748000000045": {"qty": 0.0, "costo": 75.0, "venta": 100.0}, "1748000000046": {"qty": 0.0, "costo": 385.0, "venta": 600.0}, "1748000000047": {"qty": 30.0, "costo": 67.0, "venta": 90.0}, "1748000000048": {"qty": 5.0, "costo": 150.0, "venta": 200.0}, "1748000000049": {"qty": 0.0, "costo": 110.0, "venta": 130.0}, "1748000000050": {"qty": 0.0, "costo": 135.0, "venta": 180.0}, "1748000000051": {"qty": 5.0, "costo": 250.0, "venta": 330.0}, "1748000000052": {"qty": 0.0, "costo": 85.0, "venta": 110.0}, "1748000000053": {"qty": 1.0, "costo": 145.0, "venta": 190.0}, "1748000000054": {"qty": 19.0, "costo": 135.0, "venta": 180.0}, "1748000000055": {"qty": 0.0, "costo": 500.0, "venta": 600.0}, "1748000000056": {"qty": 13.0, "costo": 58.33, "venta": 80.0}, "1748000000057": {"qty": 7.0, "costo": 250.0, "venta": 300.0}, "1748000000058": {"qty": 36.0, "costo": 55.0, "venta": 80.0}, "1748000000059": {"qty": 53.0, "costo": 6.0, "venta": 15.0}, "1748000000060": {"qty": 0.0, "costo": 150.0, "venta": 220.0}, "1748000000061": {"qty": 0.0, "costo": 190.0, "venta": 220.0}, "1748000000062": {"qty": 6.0, "costo": 170.0, "venta": 220.0}, "1748000000063": {"qty": 7.0, "costo": 470.0, "venta": 520.0}, "1748000000064": {"qty": 13.0, "costo": 250.0, "venta": 300.0}, "1748000000065": {"qty": 0.0, "costo": 300.0, "venta": 390.0}, "1748000000066": {"qty": 0.0, "costo": 300.0, "venta": 380.0}, "1748000000067": {"qty": 12.0, "costo": 90.0, "venta": 120.0}, "1748000000068": {"qty": 10.0, "costo": 90.0, "venta": 120.0}, "1748000000069": {"qty": 1.0, "costo": 280.0, "venta": 350.0}, "1748000000070": {"qty": 20.0, "costo": 85.0, "venta": 120.0}, "1748000000071": {"qty": 12.0, "costo": 40.0, "venta": 60.0}, "1748000000072": {"qty": 0.0, "costo": 750.0, "venta": 1000.0}, "1748000000073": {"qty": 0.0, "costo": 720.0, "venta": 900.0}, "1748000000074": {"qty": 4.0, "costo": 330.0, "venta": 420.0}, "1748000000075": {"qty": 0.0, "costo": 130.0, "venta": 160.0}, "1748000000076": {"qty": 0.0, "costo": 110.0, "venta": 160.0}, "1748000000077": {"qty": 47.0, "costo": 13.0, "venta": 30.0}, "1748000000078": {"qty": 5.0, "costo": 245.0, "venta": 300.0}, "1748000000079": {"qty": 15.0, "costo": 245.0, "venta": 300.0}, "1748000000080": {"qty": 4.0, "costo": 250.0, "venta": 300.0}, "1748000000081": {"qty": 8.0, "costo": 245.0, "venta": 300.0}, "1748000000082": {"qty": 0.0, "costo": 250.0, "venta": 300.0}, "1748000000083": {"qty": 9.0, "costo": 30.0, "venta": 50.0}, "1748000000084": {"qty": 11.0, "costo": 30.0, "venta": 50.0}, "1748000000085": {"qty": 5.0, "costo": 30.0, "venta": 50.0}, "1748000000086": {"qty": 6.0, "costo": 30.0, "venta": 50.0}, "1748000000087": {"qty": 17.0, "costo": 30.0, "venta": 50.0}, "1748000000088": {"qty": 15.0, "costo": 30.0, "venta": 50.0}, "1748000000089": {"qty": 4.0, "costo": 5.0, "venta": 15.0}, "1748000000090": {"qty": 0.0, "costo": 30.0, "venta": 50.0}, "1748000000091": {"qty": 1.0, "costo": 30.0, "venta": 50.0}, "1748000000092": {"qty": 25.0, "costo": 390.0, "venta": 500.0}, "1748000000093": {"qty": 0.0, "costo": 60.0, "venta": 80.0}, "1748000000094": {"qty": 0.0, "costo": 500.0, "venta": 550.0}, "1748000000095": {"qty": 24.0, "costo": 530.0, "venta": 650.0}, "1748000000096": {"qty": 0.0, "costo": 35.0, "venta": 50.0}, "1748000000097": {"qty": 10.0, "costo": 38.0, "venta": 50.0}, "1748000000098": {"qty": 27.0, "costo": 155.0, "venta": 200.0}, "1748000000099": {"qty": 0.0, "costo": 90.0, "venta": 130.0}, "1748000000100": {"qty": 1.0, "costo": 70.0, "venta": 110.0}, "1748000000101": {"qty": 0.0, "costo": 150.0, "venta": 200.0}, "1748000000102": {"qty": 6.0, "costo": 90.0, "venta": 130.0}, "1748000000103": {"qty": 22.0, "costo": 100.0, "venta": 130.0}, "1748000000104": {"qty": 0.0, "costo": 145.0, "venta": 200.0}, "1748000000105": {"qty": 1.0, "costo": 450.0, "venta": 550.0}, "1748000000106": {"qty": 0.0, "costo": 300.0, "venta": 350.0}, "1748000000107": {"qty": 2.0, "costo": 1350.0, "venta": 1700.0}}, "ventas": [], "entradas": [{"prodId": 1748000000004, "qty": 50.0, "costo": 37.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000005}, {"prodId": 1748000000009, "qty": 10.0, "costo": 400.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000010}, {"prodId": 1748000000025, "qty": 20.0, "costo": 26.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000026}, {"prodId": 1748000000028, "qty": 20.0, "costo": 20.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000029}, {"prodId": 1748000000034, "qty": 20.0, "costo": 130.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000035}, {"prodId": 1748000000047, "qty": 24.0, "costo": 67.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000048}, {"prodId": 1748000000051, "qty": 4.0, "costo": 250.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000052}, {"prodId": 1748000000056, "qty": 12.0, "costo": 58.33, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000057}, {"prodId": 1748000000089, "qty": 7.0, "costo": 5.0, "nuevoCosto": null, "obs": "Importado Excel", "ts": 1748000000090}], "mermas": [], "transferencias": [{"prodId": 1748000000008, "qty": 1.0, "tipo": "salida", "costo": 520.0, "obs": "Importado Excel", "ts": 1748000000009}, {"prodId": 1748000000012, "qty": 1.0, "tipo": "salida", "costo": 390.0, "obs": "Importado Excel", "ts": 1748000000013}, {"prodId": 1748000000059, "qty": 2.0, "tipo": "salida", "costo": 6.0, "obs": "Importado Excel", "ts": 1748000000060}, {"prodId": 1748000000091, "qty": 1.0, "tipo": "salida", "costo": 30.0, "obs": "Importado Excel", "ts": 1748000000092}], "gastos": [], "cerrado": true, "efectivo": 0, "transfer": 0}}, "config": {"salMin": 500, "salPct": 17, "nombre": "Los Camil@s"}};
+function importarDatosExcel(){
+  if(!confirm('¿Importar 108 productos y los días 01 y 02 Jun 2026?\nSe reemplazarán los datos actuales.'))return;
+  try{
+    localStorage.setItem('camilas_v4', JSON.stringify(DATOS_EXCEL));
+    const b=document.getElementById('banner-import');if(b)b.remove();
+    cargarDB();getDia(diaActual);renderInicio();
+    toast('✓ 108 productos y 2 días importados');
+  }catch(e){alert('Error: '+e.message);}
+}
+
+cargarDB();getDia(diaActual);
+      renderInicio();
+      toast(`✓ Backup importado: ${data.productos.length} productos`);
+    }catch(err){alert('Error al importar: '+err.message);}
   };
-  const fila=p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:.5px solid var(--border)">
-    <div>
-      <div style="font-size:13px;font-weight:500">${p.nombre}</div>
-      <div style="font-size:11px;color:var(--text3)">${formatFecha(p.vence)} · ${Math.round(invDisponible(diaActual)[p.id]?.qty||0)} u.</div>
-    </div>
-    ${fmtDias(p.dias)}
-  </div>`;
-  const porVencer=prods.filter(p=>p.dias<=10);
-  document.getElementById('lista-por-vencer').innerHTML=porVencer.length
-    ?porVencer.map(fila).join('')
-    :`<div class="empty" style="padding:12px">✓ Ningún producto vence en los próximos 10 días</div>`;
-  document.getElementById('lista-vencimientos').innerHTML=prods.length
-    ?prods.map(fila).join('')
-    :`<div class="empty"><i class="ti ti-calendar"></i>Ningún producto tiene fecha de vencimiento</div>`;
+  reader.readAsText(file,'UTF-8');
+  event.target.value='';
 }
 
-// ─── AJUSTE SALARIO ───────────────────────────────────────────
-function guardarAjusteSal(){
-  const dia=getDia(diaActual);
-  dia.salBonus=parseFloat(document.getElementById('cfg-bonus').value)||0;
-  dia.salDescuento=parseFloat(document.getElementById('cfg-descuento').value)||0;
-  guardarDB();actualizarPreviewSal();
-}
-function actualizarPreviewSal(){
-  const gn=gananciaNeta(diaActual),tv=totalVentasDia(diaActual);
-  const base=tv>0?Math.max(DB.config.salMin,gn*(DB.config.salPct/100)):0;
-  const dia=getDia(diaActual);
-  const bonus=Number(dia.salBonus||0),desc=Number(dia.salDescuento||0);
-  const total=Math.max(0,base+bonus-desc);
-  const prev=document.getElementById('cfg-sal-preview');
-  if(prev)prev.innerHTML=`Base: ${cup(base)}${bonus>0?` <span style="color:var(--green)">+ ${cup(bonus)}</span>`:''}${desc>0?` <span style="color:var(--red)">− ${cup(desc)}</span>`:''} = <b style="color:var(--green)">${cup(total)}</b>`;
+// ─── DESHACER CIERRE ──────────────────────────────────────────
+function deshacerCierre(){
+  // Buscar el último día cerrado
+  const diasCerrados=Object.entries(DB.dias)
+    .filter(([,d])=>d.cerrado)
+    .sort((a,b)=>b[0].localeCompare(a[0]));
+  if(!diasCerrados.length){toast('No hay cierres para deshacer');return;}
+  const [fecha,dia]=diasCerrados[0];
+  if(!confirm(`¿Reabrir el cierre del ${formatFecha(fecha)}?
+Podrás modificar el inventario final de ese día.`))return;
+  dia.cerrado=false;
+  dia.invFinal={};
+  // Eliminar movimiento de cierre
+  DB.movimientos=DB.movimientos.filter(m=>!(m.tipo==='cierre'&&m.fecha===fecha));
+  guardarDB();
+  diaActual=fecha;
+  actualizarFechaHeader();
+  mostrarPantalla('cierre',null);
+  toast(`✓ Cierre del ${formatFecha(fecha)} reabierto`);
 }
 
 // ─── IMPORTAR DATOS EXCEL ─────────────────────────────────────
