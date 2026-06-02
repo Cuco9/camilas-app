@@ -1,4 +1,4 @@
-const CACHE = 'camilas-v2';
+const CACHE = 'camilas-v5';
 const ARCHIVOS = [
   './',
   './index.html',
