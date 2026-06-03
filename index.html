@@ -2306,7 +2306,7 @@ function importarDatosExcel(){
   if(!confirm('¿Importar 108 productos y los días 01 y 02 Jun 2026?\nSe reemplazarán los datos actuales.'))return;
   try{
     localStorage.setItem(getDBKey(), JSON.stringify(DATOS_EXCEL));
-    localStorage.setItem('camilas_importado', '1');
+    localStorage.setItem('camilas_importado_'+getPuntoActual(), '1');
     const b=document.getElementById('banner-import');if(b)b.remove();
     cargarDB();getDia(diaActual);renderInicio();
     toast('✓ 108 productos y 2 días importados');
@@ -2342,7 +2342,7 @@ document.addEventListener('click',function(e){
 // ─── INIT ─────────────────────────────────────────────────────
 initPuntos();
 cargarDB();getDia(diaActual);
-if(localStorage.getItem('camilas_importado')){const b=document.getElementById('banner-import');if(b)b.style.display='none';}
+if(localStorage.getItem('camilas_importado_'+getPuntoActual())||localStorage.getItem('camilas_importado')){const b=document.getElementById('banner-import');if(b)b.style.display='none';}
 (function(){const n=DB.config.nombre;if(n){const el=document.getElementById('header-nombre');if(el)el.textContent=n;}})();
 actualizarFechaHeader();
 renderInicio();
