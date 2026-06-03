@@ -528,19 +528,7 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
       <i class="ti ti-alert-triangle" aria-hidden="true"></i> Borrar TODOS los datos de este punto
     </button>
   </div>
-  <div class="card">
-    <div class="card-title"><i class="ti ti-help-circle" aria-hidden="true"></i>Soporte</div>
-    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">¿Tienes dudas o necesitas ayuda con la aplicación? Escríbenos.</div>
-    <a href="mailto:neovisual2025@gmail.com" style="text-decoration:none">
-      <button class="btn primary full"><i class="ti ti-mail" aria-hidden="true"></i> neovisual2025@gmail.com</button>
-    </a>
-    <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center">Respuesta en 24–48 horas</div>
-  </div>
-  <div class="card" style="cursor:pointer" onclick="mostrarPantalla('tutorial',document.querySelector('.nav-btn'))">
-    <div class="card-title"><i class="ti ti-book" aria-hidden="true"></i>Tutorial de uso</div>
-    <div style="font-size:13px;color:var(--text2)">Aprende a usar todas las funciones de la aplicación.</div>
-    <div style="margin-top:10px;color:var(--green);font-size:13px;font-weight:600">Ver tutorial completo →</div>
-  </div>
+
   <div style="text-align:center;padding:16px;font-size:11px;color:var(--text3)">Los Camil@s v5.0 · Datos guardados localmente</div>
 </div>
 
@@ -2325,6 +2313,32 @@ function importarDatosExcel(){
   }catch(e){alert('Error: '+e.message);}
 }
 
+
+// ─── FAB AYUDA ────────────────────────────────────────────────
+let fabAbierto=false;
+function toggleFab(){
+  fabAbierto=!fabAbierto;
+  const opc=document.getElementById('fab-opciones');
+  const icon=document.getElementById('fab-ayuda-icon');
+  const btn=document.getElementById('fab-ayuda-btn');
+  if(opc)opc.style.display=fabAbierto?'flex':'none';
+  if(icon){icon.className=fabAbierto?'ti ti-x':'ti ti-help';icon.style.fontSize='22px';}
+  if(btn)btn.style.transform=fabAbierto?'rotate(45deg)':'rotate(0)';
+}
+function cerrarFab(){
+  fabAbierto=false;
+  const opc=document.getElementById('fab-opciones');
+  const icon=document.getElementById('fab-ayuda-icon');
+  const btn=document.getElementById('fab-ayuda-btn');
+  if(opc)opc.style.display='none';
+  if(icon){icon.className='ti ti-help';icon.style.fontSize='22px';}
+  if(btn)btn.style.transform='rotate(0)';
+}
+// cerrar FAB al tocar fuera
+document.addEventListener('click',function(e){
+  if(fabAbierto&&!document.getElementById('fab-ayuda-cont')?.contains(e.target))cerrarFab();
+});
+
 // ─── INIT ─────────────────────────────────────────────────────
 initPuntos();
 cargarDB();getDia(diaActual);
@@ -2333,5 +2347,34 @@ if(localStorage.getItem('camilas_importado')){const b=document.getElementById('b
 actualizarFechaHeader();
 renderInicio();
 </script>
+
+<!-- BOTÓN FLOTANTE AYUDA -->
+<div style="position:fixed;bottom:80px;right:16px;z-index:300;display:flex;flex-direction:column;gap:10px;align-items:flex-end" id="fab-ayuda-cont">
+  <!-- Opciones expandidas -->
+  <div id="fab-opciones" style="display:none;flex-direction:column;gap:8px;align-items:flex-end">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:var(--surface);border:.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.12)">Tutorial</span>
+      <button onclick="cerrarFab();mostrarPantalla('tutorial',null)"
+        style="width:42px;height:42px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(15,110,86,.4)">
+        <i class="ti ti-book" style="font-size:20px;color:#fff"></i>
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:var(--surface);border:.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.12)">Soporte</span>
+      <a href="mailto:neovisual2025@gmail.com" style="text-decoration:none">
+        <button onclick="cerrarFab()"
+          style="width:42px;height:42px;border-radius:50%;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(24,95,165,.4)">
+          <i class="ti ti-mail" style="font-size:20px;color:#fff"></i>
+        </button>
+      </a>
+    </div>
+  </div>
+  <!-- Botón principal -->
+  <button id="fab-ayuda-btn" onclick="toggleFab()"
+    style="width:50px;height:50px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(15,110,86,.45);transition:transform .2s">
+    <i class="ti ti-help" style="font-size:22px;color:#fff" id="fab-ayuda-icon"></i>
+  </button>
+</div>
+
 </body>
 </html>
