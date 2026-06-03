@@ -1,5 +1,5 @@
 // Versión única basada en fecha/hora — cambia automáticamente con cada deploy
-const CACHE = 'camilas-' + '20260602-1';
+const CACHE = 'camilas-' + '20260602-3';
 const ARCHIVOS = [
   './',
   './index.html',
