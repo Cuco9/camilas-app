@@ -236,6 +236,17 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
     <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 6px">Más rentables</div>
     <div id="top-ganancia"><div class="empty"><i class="ti ti-coin"></i>Sin datos aún</div></div>
   </div>
+  <!-- AYUDA -->
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <button class="btn full" style="background:var(--green-light);color:var(--green-dark);border-color:var(--green-light)" onclick="mostrarPantalla('tutorial',null)">
+      <i class="ti ti-book" aria-hidden="true"></i> Tutorial
+    </button>
+    <a href="mailto:neovisual2025@gmail.com" style="text-decoration:none;flex:1">
+      <button class="btn full" style="background:var(--blue-light);color:var(--blue);border-color:var(--blue-light);width:100%">
+        <i class="ti ti-mail" aria-hidden="true"></i> Soporte
+      </button>
+    </a>
+  </div>
 </div>
 
 <!-- ═══ MOVIMIENTOS ═══ -->
@@ -2547,33 +2558,7 @@ actualizarFechaHeader();
 renderInicio();
 </script>
 
-<!-- BOTÓN FLOTANTE AYUDA -->
-<div style="position:fixed;bottom:80px;right:16px;z-index:300;display:flex;flex-direction:column;gap:10px;align-items:flex-end" id="fab-ayuda-cont">
-  <!-- Opciones expandidas -->
-  <div id="fab-opciones" style="display:none;flex-direction:column;gap:8px;align-items:flex-end">
-    <div style="display:flex;align-items:center;gap:8px">
-      <span style="background:var(--surface);border:.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.12)">Tutorial</span>
-      <button onclick="cerrarFab();mostrarPantalla('tutorial',null)"
-        style="width:42px;height:42px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(15,110,86,.4)">
-        <i class="ti ti-book" style="font-size:20px;color:#fff"></i>
-      </button>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span style="background:var(--surface);border:.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.12)">Soporte</span>
-      <a href="mailto:neovisual2025@gmail.com" style="text-decoration:none">
-        <button onclick="cerrarFab()"
-          style="width:42px;height:42px;border-radius:50%;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(24,95,165,.4)">
-          <i class="ti ti-mail" style="font-size:20px;color:#fff"></i>
-        </button>
-      </a>
-    </div>
-  </div>
-  <!-- Botón principal -->
-  <button id="fab-ayuda-btn" onclick="toggleFab()"
-    style="width:50px;height:50px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(15,110,86,.45);transition:transform .2s">
-    <i class="ti ti-help" style="font-size:22px;color:#fff" id="fab-ayuda-icon"></i>
-  </button>
-</div>
+
 
 </body>
 </html>
