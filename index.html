@@ -357,6 +357,7 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
     <div class="info-box green">
       Escribe cuántas unidades quedan físicamente de cada producto al final del día. La app calculará las ventas automáticamente.
     </div>
+    <input type="text" id="busq-cierre" placeholder="Buscar producto..." oninput="renderCierreForm()" style="margin-bottom:8px">
     <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:6px;padding:6px 0;border-bottom:.5px solid var(--border);margin-bottom:4px">
       <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Producto</span>
       <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;text-align:center;min-width:36px">Inic.</span>
@@ -373,6 +374,9 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
     </button>
     <button class="btn full" style="margin-top:8px" id="btn-cerrar-dia" onclick="cerrarDia()" style="display:none">
       <i class="ti ti-lock" aria-hidden="true"></i> Cerrar y guardar día
+    </button>
+    <button class="btn full" style="margin-top:8px;color:var(--amber);border-color:rgba(186,117,23,.3)" onclick="deshacerCambiosCierre()">
+      <i class="ti ti-rotate-left" aria-hidden="true"></i> Deshacer cambios del cierre
     </button>
   </div>
 </div>
@@ -431,6 +435,24 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
     <button class="tab activo" onclick="cambiarTabHist('movs',this)">Movimientos</button>
     <button class="tab" onclick="cambiarTabHist('meses',this)">Por mes</button>
     <button class="tab" onclick="cambiarTabHist('anio',this)">Por año</button>
+    <button class="tab" onclick="cambiarTabHist('resumen',this)">Resumen</button>
+  </div>
+  <div id="hist-resumen" style="display:none">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-bar"></i>Resumen financiero</div>
+      <div class="tab-row" style="margin-bottom:10px">
+        <button class="tab activo" onclick="cambiarPeriodoResumen('mes',this)">Este mes</button>
+        <button class="tab" onclick="cambiarPeriodoResumen('anio',this)">Este año</button>
+        <button class="tab" onclick="cambiarPeriodoResumen('rango',this)">Rango</button>
+      </div>
+      <div id="resumen-rango-inputs" style="display:none;margin-bottom:12px">
+        <div class="form-row">
+          <div><label class="lbl">Desde</label><input type="date" id="resumen-desde" onchange="renderResumenFinanciero()"></div>
+          <div><label class="lbl">Hasta</label><input type="date" id="resumen-hasta" onchange="renderResumenFinanciero()"></div>
+        </div>
+      </div>
+      <div id="resumen-financiero-cont"></div>
+    </div>
   </div>
   <div id="hist-movs">
     <div class="search-bar">
@@ -496,16 +518,7 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
       <button class="btn small" onclick="exportarInventarioCSV()"><i class="ti ti-file-type-xls" aria-hidden="true"></i> Inventario actual</button>
     </div>
   </div>
-  <div class="card">
-    <div class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i>Navegador de mes</div>
-    <div class="cal-nav">
-      <button class="btn small" onclick="navMes(-1)"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
-      <span id="cal-cfg-lbl"></span>
-      <button class="btn small" onclick="navMes(1)"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
-    </div>
-    <div class="cal-grid" id="cal-cfg-hdr"></div>
-    <div class="cal-grid" id="cal-cfg-dias" style="margin-top:4px"></div>
-  </div>
+
   <div class="card">
     <div class="card-title"><i class="ti ti-trash" aria-hidden="true"></i>Borrar historial</div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Elimina datos del historial. Esta acción <b>no se puede deshacer</b>.</div>
@@ -1130,8 +1143,8 @@ function renderCuadreInicio(){
   if(cbFecha)cbFecha.textContent=formatFecha(diaActual);
   const cbBonus=document.getElementById('cuadre-bonus');
   const cbDesc=document.getElementById('cuadre-descuento');
-  if(cbBonus)cbBonus.value=dia.salBonus||'';
-  if(cbDesc)cbDesc.value=dia.salDescuento||'';
+  if(cbBonus)cbBonus.value=dia.salBonus||DB.config.salBonusDefault||'';
+  if(cbDesc)cbDesc.value=dia.salDescuento||DB.config.salDescDefault||'';
   actualizarPreviewSalCuadre();
   calcCuadre();
 }
@@ -1172,10 +1185,10 @@ function renderTop(){
     });
   });
   const getProd=id=>DB.productos.find(p=>p.id==id)||{nombre:'Eliminado'};
-  const r=['gold','','','',''];
+  const r=['gold','','','','','','','','',''];
   const lbl=topPeriodo==='dia'?'hoy':topPeriodo==='mes'?'este mes':'este año';
-  const topV=Object.entries(vd).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const topG=Object.entries(gn).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const topV=Object.entries(vd).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const topG=Object.entries(gn).sort((a,b)=>b[1]-a[1]).slice(0,10);
   document.getElementById('top-vendidos').innerHTML=topV.length?topV.map(([id,q],i)=>`
     <div class="top-item"><div class="top-rank ${r[i]}">${i+1}</div>
     <div class="top-name">${getProd(id).nombre}</div><div class="top-val">${q} u.</div></div>`).join('')
@@ -1196,7 +1209,9 @@ function renderCierreForm(){
   invFinalTemp={};
 
   const inv=invDisponible(diaActual);
-  const prods=[...DB.productos].sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  const busqC=(document.getElementById('busq-cierre')?.value||'').toLowerCase();
+  let prods=[...DB.productos].sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  if(busqC)prods=prods.filter(p=>p.nombre.toLowerCase().includes(busqC)||(p.cat||'').toLowerCase().includes(busqC));
 
   // Si ya está cerrado, pre-llenar con invFinal guardado
   const invFinalGuardado=dia.invFinal||{};
@@ -1550,12 +1565,14 @@ function renderHistMovs(){
 
 function cambiarTabHist(tab,btn){
   document.querySelectorAll('#p-historial .tab-row .tab').forEach(t=>t.classList.remove('activo'));
-  btn.classList.add('activo');
+  if(btn)btn.classList.add('activo');
   document.getElementById('hist-movs').style.display=tab==='movs'?'block':'none';
   document.getElementById('hist-meses').style.display=tab==='meses'?'block':'none';
   document.getElementById('hist-anio').style.display=tab==='anio'?'block':'none';
+  document.getElementById('hist-resumen').style.display=tab==='resumen'?'block':'none';
   if(tab==='meses')renderResumenMeses();
   if(tab==='anio')renderResumenAnio();
+  if(tab==='resumen')renderResumenFinanciero();
 }
 
 function acumularMes(datos,f){
@@ -1574,7 +1591,7 @@ function renderResumenMeses(){
   const sorted=Object.entries(datos).sort((a,b)=>b[0].localeCompare(a[0]));
   document.getElementById('resumen-meses').innerHTML=sorted.length?sorted.map(([k,d])=>{
     const[y,m]=k.split('-');const gn=d.ganancia-d.mermas-d.gastos;
-    const sal=Math.max(DB.config.salMin*d.dias,gn*(DB.config.salPct/100));
+    const sal=d.dias>0?Math.max(DB.config.salMin*d.dias,gn*(DB.config.salPct/100)):0;
     return`<div class="card">
       <div style="font-size:15px;font-weight:700;margin-bottom:10px">${MESES[+m-1]} ${y}</div>
       <div class="stat-grid" style="margin-bottom:8px">
@@ -2003,6 +2020,129 @@ function renderVencimientos(){
     :`<div class="empty"><i class="ti ti-calendar"></i>Ningún producto tiene fecha de vencimiento</div>`;
 }
 
+
+
+
+// ─── RESUMEN FINANCIERO ───────────────────────────────────────
+let resumenPeriodo='mes';
+function cambiarPeriodoResumen(periodo,btn){
+  resumenPeriodo=periodo;
+  document.querySelectorAll('#hist-resumen .tab-row .tab').forEach(t=>t.classList.remove('activo'));
+  if(btn)btn.classList.add('activo');
+  const rangoEl=document.getElementById('resumen-rango-inputs');
+  if(rangoEl)rangoEl.style.display=periodo==='rango'?'block':'none';
+  renderResumenFinanciero();
+}
+
+function renderResumenFinanciero(){
+  const hoy=new Date();
+  const [ay,am]=[hoy.getFullYear(),String(hoy.getMonth()+1).padStart(2,'0')];
+  let diasFiltrados=[];
+
+  if(resumenPeriodo==='mes'){
+    diasFiltrados=Object.keys(DB.dias).filter(f=>f.startsWith(`${ay}-${am}`));
+  } else if(resumenPeriodo==='anio'){
+    diasFiltrados=Object.keys(DB.dias).filter(f=>f.startsWith(`${ay}`));
+  } else if(resumenPeriodo==='rango'){
+    const desde=document.getElementById('resumen-desde')?.value;
+    const hasta=document.getElementById('resumen-hasta')?.value;
+    if(!desde||!hasta){
+      document.getElementById('resumen-financiero-cont').innerHTML=
+        '<div class="empty">Selecciona el rango de fechas</div>';return;
+    }
+    diasFiltrados=Object.keys(DB.dias).filter(f=>f>=desde&&f<=hasta);
+  }
+
+  if(diasFiltrados.length===0){
+    document.getElementById('resumen-financiero-cont').innerHTML=
+      '<div class="empty"><i class="ti ti-chart-bar"></i>Sin datos para este período</div>';return;
+  }
+
+  diasFiltrados.sort();
+  let totalVentas=0,totalGanBruta=0,totalMermas=0,totalGastos=0,totalSalario=0;
+  let diasTrabajados=0;
+  const prodStats={};
+
+  diasFiltrados.forEach(f=>{
+    const tv=totalVentasDia(f);
+    const gb=gananciasBrutaDia(f);
+    const mer=totalMermasDia(f);
+    const gas=totalGastosDia(f);
+    const sal=salarioDia(f);
+    if(tv>0)diasTrabajados++;
+    totalVentas+=tv;totalGanBruta+=gb;
+    totalMermas+=mer;totalGastos+=gas;totalSalario+=sal;
+    // acumular por producto
+    calcVentasDesdeInvFinal(f).forEach(v=>{
+      if(!prodStats[v.prodId])prodStats[v.prodId]={nombre:v.nombre,vendido:0,ganancia:0,importe:0};
+      prodStats[v.prodId].vendido+=v.vendido;
+      prodStats[v.prodId].ganancia+=v.ganancia;
+      prodStats[v.prodId].importe+=v.totalVenta;
+    });
+  });
+
+  const ganNeta=totalGanBruta-totalMermas-totalGastos;
+  const ganFinal=ganNeta-totalSalario;
+
+  // Top 5 productos del período
+  const topV=Object.values(prodStats).sort((a,b)=>b.vendido-a.vendido).slice(0,5);
+  const topG=Object.values(prodStats).sort((a,b)=>b.ganancia-a.ganancia).slice(0,5);
+
+  const periodoLabel=resumenPeriodo==='mes'?`${MESES[+am-1]} ${ay}`:
+    resumenPeriodo==='anio'?`Año ${ay}`:
+    `${formatFecha(document.getElementById('resumen-desde')?.value||'')} — ${formatFecha(document.getElementById('resumen-hasta')?.value||'')}`;
+
+  document.getElementById('resumen-financiero-cont').innerHTML=`
+    <div style="font-size:13px;color:var(--text3);margin-bottom:12px">${periodoLabel} · ${diasTrabajados} días trabajados</div>
+
+    <div class="stat-grid" style="margin-bottom:10px">
+      <div class="stat"><div class="stat-label">Ventas</div><div class="stat-val green" style="font-size:18px">${cup(totalVentas)}</div></div>
+      <div class="stat"><div class="stat-label">Ganancia final</div><div class="stat-val blue" style="font-size:18px">${cup(ganFinal)}</div></div>
+    </div>
+
+    <div style="background:var(--bg);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div class="cuadre-row pos"><span>Ventas totales</span><span>${cup(totalVentas)}</span></div>
+      <div class="cuadre-row"><span>Ganancia bruta</span><span style="color:var(--blue)">${cup(totalGanBruta)}</span></div>
+      <div class="cuadre-row neg"><span>— Mermas</span><span>${cup(-totalMermas)}</span></div>
+      <div class="cuadre-row neg"><span>— Gastos</span><span>${cup(-totalGastos)}</span></div>
+      <div class="cuadre-row"><span>Ganancia neta</span><span style="color:var(--green);font-weight:600">${cup(ganNeta)}</span></div>
+      <div class="cuadre-row neg"><span>— Salario trabajador</span><span>${cup(-totalSalario)}</span></div>
+      <div class="cuadre-row total pos"><span>Ganancia final</span><span>${cup(ganFinal)}</span></div>
+    </div>
+
+    <div class="section-hdr">Top 5 más vendidos</div>
+    ${topV.length?topV.map((p,i)=>`
+      <div class="top-item">
+        <div class="top-rank ${i===0?'gold':''}">${i+1}</div>
+        <div class="top-name">${p.nombre}</div>
+        <div style="text-align:right">
+          <div class="top-val">${p.vendido} u.</div>
+          <div style="font-size:11px;color:var(--text3)">${cup(p.importe)}</div>
+        </div>
+      </div>`).join(''):'<div class="empty">Sin datos</div>'}
+
+    <div class="section-hdr" style="margin-top:12px">Top 5 más rentables</div>
+    ${topG.length?topG.map((p,i)=>`
+      <div class="top-item">
+        <div class="top-rank ${i===0?'gold':''}">${i+1}</div>
+        <div class="top-name">${p.nombre}</div>
+        <div class="top-val">${cup(p.ganancia)}</div>
+      </div>`).join(''):'<div class="empty">Sin datos</div>'}
+  `;
+}
+
+// ─── DESHACER CAMBIOS CIERRE ──────────────────────────────────
+function deshacerCambiosCierre(){
+  const dia=getDia(diaActual);
+  if(!Object.keys(dia.invFinal||{}).length){toast('No hay cambios para deshacer');return;}
+  if(!confirm('¿Deshacer todos los cambios del cierre de hoy?\nSe borrarán los inventarios finales ingresados.'))return;
+  dia.invFinal={};
+  dia.cerrado=false;
+  guardarDB();
+  renderCierreForm();
+  renderInicio();
+  toast('✓ Cambios del cierre deshachos');
+}
 
 // ─── BORRAR HISTORIAL ────────────────────────────────────────
 function borrarDia(){
