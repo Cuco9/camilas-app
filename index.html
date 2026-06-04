@@ -190,34 +190,9 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
   <div id="alertas-cont"></div>
   <div class="stat-grid" id="stats-dia"></div>
 
-  <!-- CUADRE -->
-  <div class="card" id="cuadre-card">
-    <div class="card-title"><i class="ti ti-cash" aria-hidden="true"></i>Cuadre del día</div>
-    <div id="cuadre-cont"><div class="empty" style="padding:16px"><i class="ti ti-lock-open"></i>Cierra el día para ver el cuadre</div></div>
-    <div id="cuadre-caja" style="display:none">
-      <div class="divider"></div>
-      <div class="form-row" style="margin-bottom:4px">
-        <div>
-          <label class="lbl">Efectivo (CUP)</label>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input type="number" id="inp-efectivo" placeholder="0" oninput="calcCuadre()" style="margin-bottom:0;flex:1">
-            <button class="btn small" onclick="abrirContador()" title="Contar billetes" style="flex-shrink:0;padding:9px 10px">
-              <i class="ti ti-calculator" aria-hidden="true"></i>
-            </button>
-          </div>
-        </div>
-        <div><label class="lbl">Transferencia (CUP)</label><input type="number" id="inp-transfer" placeholder="0" oninput="calcCuadre()"></div>
-      </div>
-      <div class="divider"></div>
-      <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Ajuste salario — <span id="cuadre-sal-fecha" style="color:var(--green);font-weight:400;text-transform:none"></span></div>
-      <div class="form-row">
-        <div><label class="lbl">Bonificación (CUP)</label><input type="number" id="cuadre-bonus" placeholder="0" oninput="guardarAjusteSal()"></div>
-        <div><label class="lbl">Descuento (CUP)</label><input type="number" id="cuadre-descuento" placeholder="0" oninput="guardarAjusteSal()"></div>
-      </div>
-      <div id="cuadre-sal-preview" style="font-size:12px;color:var(--text2);margin:-4px 0 8px"></div>
-      <div id="cuadre-result"></div>
-    </div>
-    <button class="btn primary full" style="margin-top:12px" onclick="mostrarPantalla('cierre',null)">
+  <!-- IR AL CIERRE -->
+  <div style="margin-bottom:12px">
+    <button class="btn primary full" onclick="mostrarPantalla('cierre',document.querySelectorAll('.nav-btn')[2])">
       <i class="ti ti-clipboard-check" aria-hidden="true"></i> Ir al cierre del día
     </button>
   </div>
@@ -393,6 +368,37 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
       <button class="btn full" style="color:var(--red);border-color:rgba(163,45,45,.3);flex:1" onclick="limpiarCierre()" title="Borra los números escritos">
         <i class="ti ti-eraser" aria-hidden="true"></i> Limpiar
       </button>
+    </div>
+
+    <!-- CUADRE DE CAJA Y SALARIO -->
+    <div id="cierre-cuadre-section" style="display:none;margin-top:14px">
+      <div class="divider"></div>
+      <div class="card-title" style="margin:10px 0 8px"><i class="ti ti-cash" aria-hidden="true"></i>Cuadre de caja</div>
+      <div id="cuadre-cont"><div class="empty" style="padding:10px"><i class="ti ti-lock-open"></i>Calcula las ventas primero</div></div>
+      <div id="cuadre-caja">
+        <div class="form-row" style="margin-bottom:4px">
+          <div>
+            <label class="lbl">Efectivo (CUP)</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="number" id="inp-efectivo" placeholder="0" oninput="calcCuadre()" style="margin-bottom:0;flex:1">
+              <button class="btn small" onclick="abrirContador()" title="Contar billetes" style="flex-shrink:0;padding:9px 10px">
+                <i class="ti ti-calculator" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div><label class="lbl">Transferencia (CUP)</label><input type="number" id="inp-transfer" placeholder="0" oninput="calcCuadre()" style="margin-bottom:0"></div>
+        </div>
+        <div id="cuadre-result" style="margin-top:8px"></div>
+        <div class="divider"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">
+          Ajuste salario — <span id="cuadre-sal-fecha" style="color:var(--green);font-weight:400;text-transform:none"></span>
+        </div>
+        <div class="form-row">
+          <div><label class="lbl">Bonificación (CUP)</label><input type="number" id="cuadre-bonus" placeholder="0" oninput="guardarAjusteSal()"></div>
+          <div><label class="lbl">Descuento (CUP)</label><input type="number" id="cuadre-descuento" placeholder="0" oninput="guardarAjusteSal()"></div>
+        </div>
+        <div id="cuadre-sal-preview" style="font-size:12px;color:var(--text2);margin:-4px 0 0"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1084,7 +1090,11 @@ function gananciaNeta(f){return gananciasBrutaDia(f)-totalMermasDia(f)-totalGast
 function salarioDia(f){
   const gn=gananciaNeta(f),tv=totalVentasDia(f);
   if(tv<=0)return 0;
-  return Math.max(DB.config.salMin,gn*(DB.config.salPct/100));
+  const base=Math.max(DB.config.salMin,gn*(DB.config.salPct/100));
+  const dia=DB.dias[f];
+  const bonus=Number(dia?.salBonus||0);
+  const desc=Number(dia?.salDescuento||0);
+  return Math.max(0,base+bonus-desc);
 }
 
 // ─── NAVEGACIÓN ──────────────────────────────────────────────
@@ -1095,7 +1105,7 @@ function mostrarPantalla(id,btn){
   if(btn)btn.classList.add('activo');
   if(id==='inicio')renderInicio();
   if(id==='movimientos'){cambiarTabMov('entradas',document.querySelector('#p-movimientos .tab'));poblarSelectsMov();}
-  if(id==='cierre')renderCierreForm();
+  if(id==='cierre'){renderCierreForm();renderCuadreInicio();}
   if(id==='inventario'){cambiarTabInv2('productos',document.querySelector('#p-inventario .tab'));}
   if(id==='historial')renderHistMovs();
   if(id==='config')renderConfig();
@@ -1118,7 +1128,6 @@ function renderInicio(){
     <div class="stat"><div class="stat-label">Salario trabajador</div><div class="stat-val amber">${cerrado?cup(sal):'—'}</div></div>
     <div class="stat"><div class="stat-label">Mermas del día</div><div class="stat-val red">${cup(mermas)}</div></div>`;
   renderAlertas();
-  renderCuadreInicio();
   renderTop();
 }
 
@@ -1138,41 +1147,18 @@ function renderAlertas(){
 
 function renderCuadreInicio(){
   const dia=getDia(diaActual);
-  const cuadreDiv=document.getElementById('cuadre-cont');
-  const cajaDiv=document.getElementById('cuadre-caja');
-  if(!dia.cerrado){
-    cuadreDiv.innerHTML=`<div class="empty" style="padding:14px"><i class="ti ti-lock-open"></i>Cierra el día para ver el cuadre</div>`;
-    cajaDiv.style.display='none';
-    return;
-  }
-  cajaDiv.style.display='block';
-  const tv=totalVentasDia(diaActual);
-  const gb=gananciasBrutaDia(diaActual);
-  const mer=totalMermasDia(diaActual);
-  const gas=totalGastosDia(diaActual);
-  const gn=gb-mer-gas;
-  const sal=salarioDia(diaActual);
-  cuadreDiv.innerHTML=`
-    <div class="cuadre-row pos"><span>Ventas totales</span><span>${cup(tv)}</span></div>
-    <div class="cuadre-row"><span>Ganancia bruta</span><span style="color:var(--blue)">${cup(gb)}</span></div>
-    ${mer>0?`<div class="cuadre-row neg"><span>— Mermas</span><span>${cup(-mer)}</span></div>`:''}
-    ${gas>0?`<div class="cuadre-row neg"><span>— Gastos</span><span>${cup(-gas)}</span></div>`:''}
-    <div class="cuadre-row"><span>Ganancia antes salario</span><span style="color:var(--green);font-weight:600">${cup(gn)}</span></div>
-    <div class="cuadre-row neg"><span>— Salario trabajador</span><span>${cup(-sal)}</span></div>
-    <div class="cuadre-row total pos"><span>Ganancia neta final</span><span>${cup(gn-sal)}</span></div>`;
   const ef=document.getElementById('inp-efectivo');
   const tr=document.getElementById('inp-transfer');
   if(ef)ef.value=dia.efectivo||'';
   if(tr)tr.value=dia.transfer||'';
-  // Bonus/descuento en cuadre
   const cbFecha=document.getElementById('cuadre-sal-fecha');
   if(cbFecha)cbFecha.textContent=formatFecha(diaActual);
   const cbBonus=document.getElementById('cuadre-bonus');
   const cbDesc=document.getElementById('cuadre-descuento');
   if(cbBonus)cbBonus.value=dia.salBonus||DB.config.salBonusDefault||'';
   if(cbDesc)cbDesc.value=dia.salDescuento||DB.config.salDescDefault||'';
-  actualizarPreviewSalCuadre();
-  calcCuadre();
+  if(typeof actualizarPreviewSalCuadre==='function')actualizarPreviewSalCuadre();
+  if(dia.cerrado&&typeof calcCuadre==='function')calcCuadre();
 }
 
 function calcCuadre(){
@@ -1232,6 +1218,8 @@ function renderCierreForm(){
   document.getElementById('cierre-fecha-lbl').textContent=formatFecha(diaActual);
   document.getElementById('cierre-resumen').style.display='none';
   document.getElementById('btn-cerrar-dia').style.display='none';
+  const cuadreSec=document.getElementById('cierre-cuadre-section');
+  if(cuadreSec)cuadreSec.style.display=dia.cerrado?'block':'none';
   invFinalTemp={};
 
   const inv=invDisponible(diaActual);
@@ -1303,6 +1291,9 @@ function calcularVentasDia(){
 
   const resumen=document.getElementById('cierre-resumen');
   resumen.style.display='block';
+  // mostrar cuadre de caja
+  const cuadreSection=document.getElementById('cierre-cuadre-section');
+  if(cuadreSection)cuadreSection.style.display='block';
   document.getElementById('cierre-totales').innerHTML=`
     <div style="margin-bottom:10px">
       <div class="section-hdr">Ventas por producto</div>
@@ -2548,6 +2539,38 @@ function cerrarFab(){
 document.addEventListener('click',function(e){
   if(fabAbierto&&!document.getElementById('fab-ayuda-cont')?.contains(e.target))cerrarFab();
 });
+
+
+// ─── AJUSTE SALARIO ───────────────────────────────────────────
+function guardarAjusteSal(){
+  const dia=getDia(diaActual);
+  const bonusEl=document.getElementById('cuadre-bonus');
+  const descEl=document.getElementById('cuadre-descuento');
+  const bonus=parseFloat(bonusEl?.value)||0;
+  const desc=parseFloat(descEl?.value)||0;
+  dia.salBonus=bonus;
+  dia.salDescuento=desc;
+  DB.config.salBonusDefault=bonus;
+  DB.config.salDescDefault=desc;
+  guardarDB();
+  actualizarPreviewSalCuadre();
+}
+
+function actualizarPreviewSalCuadre(){
+  const gn=gananciaNeta(diaActual);
+  const tv=totalVentasDia(diaActual);
+  const base=tv>0?Math.max(DB.config.salMin,gn*(DB.config.salPct/100)):0;
+  const dia=getDia(diaActual);
+  const bonus=Number(dia.salBonus||0);
+  const desc=Number(dia.salDescuento||0);
+  const total=Math.max(0,base+bonus-desc);
+  const prev=document.getElementById('cuadre-sal-preview');
+  if(prev)prev.innerHTML=`Salario base: ${cup(base)}`+
+    (bonus>0?` <span style="color:var(--green)">+bonif. ${cup(bonus)}</span>`:'')+
+    (desc>0?` <span style="color:var(--red)"> −desc. ${cup(desc)}</span>`:'')+
+    ` = <b style="color:var(--green)">${cup(total)}</b>`;
+}
+function actualizarPreviewSal(){actualizarPreviewSalCuadre();}
 
 // ─── INIT ─────────────────────────────────────────────────────
 initPuntos();
