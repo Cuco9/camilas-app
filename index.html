@@ -1048,8 +1048,17 @@ function calcVentasDesdeInvFinal(fecha){
     const final=Number(dia.invFinal[p.id]?.qty??disp);
     const vendido=disp-final;
     if(vendido>0){
-      const costo=dispInv[p.id]?.costo||p.costo;
-      const venta=dispInv[p.id]?.venta||p.venta;
+      let costo,venta;
+      if(dia.cerrado){
+        // Día cerrado: usar precios históricos guardados en ese día
+        costo=dispInv[p.id]?.costo||p.costo;
+        venta=dispInv[p.id]?.venta||p.venta;
+      } else {
+        // Día abierto (pendiente): usar precio actual del producto
+        // porque el usuario puede estar cerrando un día atrasado con precios actualizados
+        costo=p.costo||dispInv[p.id]?.costo||0;
+        venta=p.venta||dispInv[p.id]?.venta||0;
+      }
       result.push({prodId:p.id,nombre:p.nombre,vendido,costo,venta,totalVenta:vendido*venta,ganancia:vendido*(venta-costo)});
     }
   });
@@ -1525,11 +1534,39 @@ function guardarProducto(){
   if(editandoProd){
     const p=DB.productos.find(x=>x.id==editandoProd);
     if(p){
-      if(p.costo!==costo||p.venta!==venta){
-        DB.movimientos.push({tipo:'ajuste',fecha:diaActual,ts:Date.now(),desc:`Precio: ${nombre} — Costo ${cup(p.costo)}→${cup(costo)}, Venta ${cup(p.venta)}→${cup(venta)}`});
+      const cambioPrecio=p.costo!==costo||p.venta!==venta;
+      if(cambioPrecio){
+        // Preguntar desde cuándo aplica el cambio
+        const opcion=confirm(
+          `¿Aplicar el nuevo precio a partir de HOY (${formatFecha(diaActual)}) y días futuros?\n\n` +
+          `Costo: ${cup(p.costo)} → ${cup(costo)}\n` +
+          `Venta: ${cup(p.venta)} → ${cup(venta)}\n\n` +
+          `Aceptar = Solo desde hoy en adelante (días anteriores NO cambian)\n` +
+          `Cancelar = No cambiar el precio ahora`
+        );
+        if(!opcion){
+          // restaurar precios originales y continuar solo con otros cambios
+          costo=p.costo;venta=p.venta;
+        } else {
+          DB.movimientos.push({tipo:'ajuste',fecha:diaActual,ts:Date.now(),
+            desc:`Precio: ${nombre} — Costo ${cup(p.costo)}→${cup(costo)}, Venta ${cup(p.venta)}→${cup(venta)}`});
+        }
       }
       p.nombre=nombre;p.cat=cat;p.costo=costo;p.venta=venta;p.stock=stock;p.stockMin=stockMin;p.vence=vence;
-      const dia=getDia(diaActual);if(dia.invInicial[p.id])dia.invInicial[p.id].qty=stock;
+      // Actualizar precios en TODOS los días abiertos (no cerrados)
+      // para que el cierre de días atrasados refleje el precio correcto
+      Object.entries(DB.dias).forEach(([f,d])=>{
+        if(!d.cerrado&&d.invInicial&&d.invInicial[p.id]){
+          d.invInicial[p.id].costo=costo;
+          d.invInicial[p.id].venta=venta;
+        }
+        if(!d.cerrado&&d.invFinal&&d.invFinal[p.id]){
+          d.invFinal[p.id].costo=costo;
+          d.invFinal[p.id].venta=venta;
+        }
+      });
+      const dia=getDia(diaActual);
+      if(dia.invInicial[p.id])dia.invInicial[p.id].qty=stock;
     }
   } else {
     const id=Date.now();
