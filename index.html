@@ -375,9 +375,14 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
     <button class="btn full" style="margin-top:8px" id="btn-cerrar-dia" onclick="cerrarDia()" style="display:none">
       <i class="ti ti-lock" aria-hidden="true"></i> Cerrar y guardar día
     </button>
-    <button class="btn full" style="margin-top:8px;color:var(--amber);border-color:rgba(186,117,23,.3)" onclick="deshacerCambiosCierre()">
-      <i class="ti ti-rotate-left" aria-hidden="true"></i> Deshacer cambios del cierre
-    </button>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn full" style="color:var(--amber);border-color:rgba(186,117,23,.3);flex:2" onclick="deshacerCambiosCierre()">
+        <i class="ti ti-lock-open" aria-hidden="true"></i> Reabrir día
+      </button>
+      <button class="btn full" style="color:var(--red);border-color:rgba(163,45,45,.3);flex:1" onclick="limpiarCierre()" title="Borra los números escritos">
+        <i class="ti ti-eraser" aria-hidden="true"></i> Limpiar
+      </button>
+    </div>
   </div>
 </div>
 
@@ -2135,14 +2140,30 @@ function renderResumenFinanciero(){
 // ─── DESHACER CAMBIOS CIERRE ──────────────────────────────────
 function deshacerCambiosCierre(){
   const dia=getDia(diaActual);
-  if(!Object.keys(dia.invFinal||{}).length){toast('No hay cambios para deshacer');return;}
-  if(!confirm('¿Deshacer todos los cambios del cierre de hoy?\nSe borrarán los inventarios finales ingresados.'))return;
-  dia.invFinal={};
+  if(!dia.cerrado&&!Object.keys(dia.invFinal||{}).length){toast('El día ya está abierto');return;}
+  if(!confirm('¿Reabrir el día para seguir editando?\nLos datos del inventario final se conservarán.'))return;
   dia.cerrado=false;
   guardarDB();
   renderCierreForm();
   renderInicio();
-  toast('✓ Cambios del cierre deshachos');
+  toast('✓ Día reabierto — datos conservados');
+}
+
+function limpiarCierre(){
+  if(!confirm('¿Limpiar todos los valores del inventario final?\nSe borrarán los números escritos pero el día permanece abierto.'))return;
+  const dia=getDia(diaActual);
+  dia.invFinal={};
+  dia.cerrado=false;
+  guardarDB();
+  // Limpiar también los campos visuales
+  DB.productos.forEach(p=>{
+    const el=document.getElementById('fin-'+p.id);
+    if(el){el.value='';const vd=document.getElementById('vd-'+p.id);if(vd){vd.textContent='—';vd.className='vendido';}}
+  });
+  document.getElementById('cierre-resumen').style.display='none';
+  document.getElementById('btn-cerrar-dia').style.display='none';
+  renderInicio();
+  toast('✓ Inventario final limpiado');
 }
 
 // ─── BORRAR HISTORIAL ────────────────────────────────────────
