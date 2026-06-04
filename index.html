@@ -36,8 +36,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .header h1{font-size:19px;font-weight:700}
 .header .fecha-sel{font-size:12px;opacity:.85;margin-top:3px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:rgba(255,255,255,.15);border-radius:20px}
 .nav-bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:.5px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom)}
-.nav-btn{flex:1;padding:10px 2px 8px;border:none;background:none;cursor:pointer;font-size:10px;color:var(--text2);display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .2s;font-family:inherit}
-.nav-btn i{font-size:21px}
+.nav-btn{flex:1;padding:8px 1px 6px;border:none;background:none;cursor:pointer;font-size:9px;color:var(--text2);display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .2s;font-family:inherit;min-width:0}
+.nav-btn i{font-size:19px}
 .nav-btn.activo{color:var(--green)}
 .pantalla{display:none;padding:12px 12px 0}
 .pantalla.activa{display:block}
@@ -761,10 +761,11 @@ label.lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;font
 
 <nav class="nav-bottom">
   <button class="nav-btn activo" onclick="mostrarPantalla('inicio',this)"><i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span></button>
-  <button class="nav-btn" onclick="mostrarPantalla('movimientos',this)"><i class="ti ti-arrows-transfer-up" aria-hidden="true"></i><span>Movimientos</span></button>
+  <button class="nav-btn" onclick="mostrarPantalla('movimientos',this)"><i class="ti ti-arrows-transfer-up" aria-hidden="true"></i><span>Movs.</span></button>
   <button class="nav-btn" onclick="mostrarPantalla('cierre',this)"><i class="ti ti-clipboard-check" aria-hidden="true"></i><span>Cierre</span></button>
   <button class="nav-btn" onclick="mostrarPantalla('almacen',this)"><i class="ti ti-warehouse" aria-hidden="true"></i><span>Almacén</span></button>
-  <button class="nav-btn" onclick="mostrarPantalla('inventario',this)"><i class="ti ti-box" aria-hidden="true"></i><span>Inventario</span></button>
+  <button class="nav-btn" onclick="mostrarPantalla('inventario',this)"><i class="ti ti-box" aria-hidden="true"></i><span>Invent.</span></button>
+  <button class="nav-btn" onclick="mostrarPantalla('historial',this)"><i class="ti ti-history" aria-hidden="true"></i><span>Historial</span></button>
   <button class="nav-btn" onclick="mostrarPantalla('config',this)"><i class="ti ti-settings" aria-hidden="true"></i><span>Config</span></button>
 </nav>
 
